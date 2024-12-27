@@ -1,0 +1,7 @@
+.venv
+*.mp3
+**/*.pyc
+**/__pycache__
+.git
+node_modules
+*.log
