@@ -4,6 +4,15 @@ services:
     container_name: audio_downloader
     environment:
       - API_KEY=AIzaSyC-bCFtNAWruc2gnJBqO9x_gKib8MZ4nUA  # Замените на ваш API ключ
+    #volumes:
+    #  - .:/app
+    #restart: on-failure
+
+  file-api:
+    build:
+      context: ./files_storage
+      dockerfile: ./Dockerfile
+    ports:
+      - "8000:8000"
     volumes:
-      - .:/app
-    restart: on-failure
+      - "./file_storage:/app/file_storage"  # Для хранения файлов

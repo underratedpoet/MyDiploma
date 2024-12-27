@@ -39,28 +39,48 @@ def get_random_video(query="instrumental music"):
         print(f"Ошибка при поиске видео: {e}")
         return None
 
-def download_audio(video_id):
-    """Скачивает аудио с YouTube."""
+def download_audio(video_id, return_bytes=True):
+    """Скачивает аудио с YouTube и возвращает байты файла или путь к файлу."""
     try:
         video_url = f"https://www.youtube.com/watch?v={video_id}"
         ydl_opts = {
             'format': 'bestaudio/best',  # Скачивает только аудио
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
+                'preferredcodec': 'wav',  # Убедитесь, что сохраняется в mp3
                 'preferredquality': '192',
             }],
-            'outtmpl': '%(title)s.%(ext)s',  # Формат имени файла
             'cookiefile': 'cookies.txt',
+            'outtmpl': '%(title)s.%(ext)s',  # Формат имени файла, гарантируем что это будет .mp3
         }
 
         with YoutubeDL(ydl_opts) as ydl:
             print(f"Скачивание: {video_url}")
             ydl.download([video_url])
-            print("Загрузка завершена.")
+            
+            # Получаем путь к скачанному файлу
+            downloaded_file_path = ydl.prepare_filename(ydl.extract_info(video_url, download=False))
+            mp3_file_path = downloaded_file_path.replace(".webm", ".wav")  # Путь до файла .mp3
+            print(f"Загрузка завершена. Файл сохранён по пути: {mp3_file_path}")
+
+            # Если нужно вернуть байты файла
+            if return_bytes:
+                with open(mp3_file_path, 'rb') as f:
+                    audio_bytes = f.read()
+
+                # Удаляем файл после считывания байтов
+                os.remove(mp3_file_path)
+                print(f"Файл удалён: {mp3_file_path}")
+                print(f"Возвращается строка байт длиной {len(audio_bytes)}")
+                
+                return audio_bytes
+
+            return mp3_file_path
+
     except Exception as e:
         print(f"Ошибка при скачивании: {e}")
-
+        return None
+    
 # Основной процесс
 query = "instrumental music"
 video_id = get_random_video(query)

@@ -19,4 +19,4 @@ COPY ./cookies.txt cookies.txt
 # Запустим скрипт
 #CMD [ "find", "." ]
 ENTRYPOINT ["python"]
-CMD ["utils/music_processor.py"]
+CMD ["music_processor.py"]
