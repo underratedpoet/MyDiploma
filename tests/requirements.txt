@@ -1,0 +1,8 @@
+python-multipart==0.0.6
+fastapi
+uvicorn
+pytest
+httpx>=0.22.0
+pytest-asyncio
+uvicorn==0.22.0
+

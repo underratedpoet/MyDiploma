@@ -1,0 +1,7 @@
+services:
+  fs-test:
+    build:
+      context: ..
+      dockerfile: ./tests/Dockerfile
+    volumes:
+      - "./fs:/app/fs"  # Для хранения файлов
