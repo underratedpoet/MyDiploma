@@ -1,8 +1,6 @@
 from fastapi import FastAPI, UploadFile, HTTPException, Query
 from fastapi.responses import FileResponse, StreamingResponse
 from pathlib import Path
-import shutil
-import os
 import random
 
 app = FastAPI()
