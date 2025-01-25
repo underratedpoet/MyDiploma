@@ -3,7 +3,7 @@ import numpy as np
 from scipy.signal import butter, lfilter
 import wave
 
-def process_wav(wav_bytes: bytes, filter_width: float, filter_freq: float, gain: float) -> bytes:
+def one_band_eq(wav_bytes: bytes, filter_width: float, filter_freq: float, gain: float) -> bytes:
     """
     Применяет полосовой фильтр или усиливает частоты в WAV-файле.
 
@@ -60,7 +60,7 @@ def bandpass_gain(audio_data: np.ndarray, central_freq: float, bandwidth: float,
     highcut = central_freq + bandwidth / 2
 
     # Создаем фильтр Баттерворта
-    b, a = butter(6, [lowcut / (0.5 * samp_rate), highcut / (0.5 * samp_rate)], btype='bandpass')
+    b, a = butter(3, [lowcut / (0.5 * samp_rate), highcut / (0.5 * samp_rate)], btype='bandpass')
     
     # Применяем фильтр к аудиоданным (по оси 0, так как каналы могут быть разные)
     filtered_audio = lfilter(b, a, audio_data, axis=0)
@@ -100,7 +100,7 @@ def bandstop_filter(audio_data: np.ndarray, central_freq: float, bandwidth: floa
     highcut = central_freq + bandwidth / 2
 
     # Проектируем фильтр Баттерворта типа bandstop
-    b, a = butter(6, [lowcut / (0.5 * samp_rate), highcut / (0.5 * samp_rate)], btype='bandstop')
+    b, a = butter(3, [lowcut / (0.5 * samp_rate), highcut / (0.5 * samp_rate)], btype='bandstop')
     
     # Применяем фильтр к аудиоданным (по оси 0, так как каналы могут быть разные)
     filtered_audio = lfilter(b, a, audio_data, axis=0)
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     with open("D:/Универ/ДИПЛОМ/Project/fs/testing_tracks/full-1.wav", "rb") as f:
         wav_data = f.read()
 
-    processed_wav = process_wav(wav_data, 1000, 1000, -10)
+    processed_wav = one_band_eq(wav_data, 145, 150, 10)
 
     with open("output.wav", "wb") as f:
         f.write(processed_wav)
