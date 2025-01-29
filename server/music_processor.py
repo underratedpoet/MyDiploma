@@ -1,6 +1,7 @@
 import io
 import numpy as np
 from scipy.signal import butter, lfilter
+from pydub import AudioSegment
 import wave
 
 def one_band_eq(wav_bytes: bytes, filter_width: float, filter_freq: float, gain: float) -> bytes:
@@ -112,6 +113,31 @@ def bandstop_filter(audio_data: np.ndarray, central_freq: float, bandwidth: floa
 
     # Возвращаем отфильтрованный сигнал
     return output_audio.astype(np.int32)
+
+def normalize_wav_bytes(wav_bytes: bytes, target_dBFS=-14.0) -> bytes:
+    """
+    Нормализует громкость WAV-файла.
+
+    :param wav_bytes: WAV-файл в виде строки байтов.
+    :param target_dBFS: Целевой уровень громкости (по умолчанию -14 дБ).
+    :return: Обработанный WAV-файл в виде строки байтов.
+    """
+    try:
+        # Создание аудиосегмента из строки байтов
+        audio = AudioSegment.from_file(io.BytesIO(wav_bytes), format="wav")
+
+        # Нормализация громкости
+        change_in_dBFS = target_dBFS - audio.dBFS
+        normalized_audio = audio.apply_gain(change_in_dBFS)
+
+        # Экспорт обработанного аудио в строку байтов
+        output_io = io.BytesIO()
+        normalized_audio.export(output_io, format="wav")
+        return output_io.getvalue()
+
+    except Exception as e:
+        print(f"Ошибка при обработке аудио: {e}")
+        return None
 
 if __name__ == "__main__":
     # Пример использования

@@ -4,5 +4,5 @@
 .webm
 .part
 fs/
-.wav
-.reareaks
+**.wav
+**.reapeaks
