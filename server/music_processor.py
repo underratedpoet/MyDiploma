@@ -139,6 +139,8 @@ def normalize_wav_bytes(wav_bytes: bytes, target_dBFS=-14.0) -> bytes:
         print(f"Ошибка при обработке аудио: {e}")
         return None
 
+
+
 if __name__ == "__main__":
     # Пример использования
     with open("D:/Универ/ДИПЛОМ/Project/fs/testing_tracks/full-1.wav", "rb") as f:

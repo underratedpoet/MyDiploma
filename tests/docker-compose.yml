@@ -1,7 +1,43 @@
 services:
+  # тест файловой системы и ее API
   fs-test:
     build:
       context: ..
       dockerfile: ./tests/Dockerfile
     volumes:
       - "./fs:/app/fs"  # Для хранения файлов
+
+  # тест БД и ее API
+  postgres-test:
+    image: postgres:latest
+    container_name: postgres_db-test
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sound_test_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  adminer-test:
+    image: adminer
+    container_name: adminer_ui-test
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "8080:8080"
+
+  db_init-test:
+    image: postgres:latest
+    container_name: db_initializer-test
+    build:
+      context: ..
+    depends_on:
+      - postgres-test
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    entrypoint: ["/bin/sh", "-c", "exec psql -h db -U admin -d test_db -f /docker-entrypoint-initdb.d/init.sql"]
+    restart: on-failure
