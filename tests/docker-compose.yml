@@ -1,9 +1,18 @@
 services:
   # тест файловой системы и ее API
-  fs-test:
+  service_tests:
     build:
       context: ..
       dockerfile: ./tests/Dockerfile
+    depends_on:
+      db_init:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
     volumes:
       - "./fs:/app/fs"  # Для хранения файлов
 
@@ -28,7 +37,7 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     ports:
-      - "8080:8080"
+      - "8080:8081"
 
   db_init-test:
     image: postgres:latest

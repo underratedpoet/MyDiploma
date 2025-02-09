@@ -6,3 +6,5 @@
 fs/
 **.wav
 **.reapeaks
+.vscode/
+postgres_data/

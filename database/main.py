@@ -2,7 +2,7 @@ import os
 
 from fastapi import FastAPI, HTTPException, Depends
 from typing import List
-from database.manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
+from manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
 
 from utils.shemas import User, Test
 

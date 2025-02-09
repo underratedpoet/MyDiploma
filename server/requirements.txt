@@ -1,5 +1,7 @@
 scipy
+numpy
 soundfile
+pretty_midi
 
 fastapi==0.100.0
 uvicorn==0.22.0
