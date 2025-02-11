@@ -9,3 +9,4 @@ node_modules
 *.yaml
 Dockerfile
 *.mid
+*.sf2
