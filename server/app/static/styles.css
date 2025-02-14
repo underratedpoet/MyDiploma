@@ -1,0 +1,85 @@
+/* === Глобальные стили === */
+body {
+    background-color: #121212;
+    color: #E0E0E0;
+    font-family: "Arial", sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* === Контейнер контента === */
+.container {
+    width: 90%;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #1E1E1E;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+}
+
+/* === Заголовки === */
+h1, h2 {
+    color: #BB86FC;
+}
+
+/* === Ссылки === */
+a {
+    color: #BB86FC;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #FF79C6;
+}
+
+/* === Формы === */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input, button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input {
+    background: #333;
+    color: #E0E0E0;
+}
+
+button {
+    background: #BB86FC;
+    color: #121212;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #FF79C6;
+}
+
+/* === Кнопки === */
+.nav-links {
+    margin-top: 20px;
+}
+
+.nav-links a {
+    margin: 10px;
+    padding: 10px 15px;
+    background: #333;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.nav-links a:hover {
+    background: #444;
+}

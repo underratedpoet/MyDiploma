@@ -3,7 +3,7 @@ import pretty_midi
 import subprocess
 import soundfile as sf
 
-from server.structures import Note, Chord  # Импортируем Note и Chord
+from structures import Note, Chord  # Импортируем Note и Chord
 
 SF2_PATH = "/server/FluidR3_GM.sf2"  # Путь к soundfont
 
