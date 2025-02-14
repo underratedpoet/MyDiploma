@@ -56,6 +56,17 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
 
+  server:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+    restart: always
+    depends_on:
+      db_init:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8000"
+
 volumes:
   postgres_data:
     driver: local

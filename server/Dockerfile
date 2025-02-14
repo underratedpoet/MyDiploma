@@ -11,14 +11,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем Python-библиотеки
-COPY database/requirements.txt .
+COPY server/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем файлы проекта в контейнер
-COPY . .
+COPY server/ .
+COPY utils/ ./utils/
 
 # Указываем путь к SoundFont
 ENV SF2_PATH="/app/FluidR3_GM.sf2"
 
-# Указываем команду по умолчанию (можно запустить контейнер с bash)
-CMD ["python"]
+# Открываем порт 8000
+EXPOSE 8000
+
+# Запускаем FastAPI сервер
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
