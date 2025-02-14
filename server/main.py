@@ -10,4 +10,5 @@ app.include_router(auth.router)
 app.include_router(profile.router)
 
 # Подключаем статику (CSS, JS)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount('/static', StaticFiles(directory='static'), 'static')
+

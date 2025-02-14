@@ -5,6 +5,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - "./fs:/app/fs"  # Для хранения файлов
+    ports:
+      - "8083:8000"
 
   postgres:
     image: postgres:latest
@@ -55,12 +57,16 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+    ports:
+      - "8082:8000"
 
   server:
     build:
       context: .
       dockerfile: ./server/Dockerfile
     restart: always
+    environment:
+      DB_API_URL: "http://db-api:8082"
     depends_on:
       db_init:
         condition: service_completed_successfully

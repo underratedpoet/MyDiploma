@@ -11,3 +11,4 @@ requests
 jinja2
 bcrypt 
 fastapi-login
+httpx
