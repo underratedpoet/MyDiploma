@@ -5,7 +5,7 @@ import soundfile as sf
 
 from structures import Note, Chord  # Импортируем Note и Chord
 
-SF2_PATH = "/server/FluidR3_GM.sf2"  # Путь к soundfont
+SF2_PATH = "/server/utils/FluidR3_GM.sf2"  # Путь к soundfont
 
 def midi_to_wav(midi_data: bytes) -> bytes:
     """Конвертирует MIDI (bytes) в WAV (bytes)."""

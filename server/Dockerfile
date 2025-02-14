@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем Python-библиотеки
-COPY requirements.txt .
+COPY database/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем файлы проекта в контейнер
