@@ -27,14 +27,8 @@ def get_user_id(request: Request):
     except JWTError:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-@router.get("/tests/bandpass-gain")
-async def get_test_page(request: Request):
-    """Отображает страницу теста."""
-    return templates.TemplateResponse("bandpass_gain_test.html", {"request": request})
-
-@router.get("/generate-test/bandpass-gain")
-async def generate_test(request: Request, difficulty: str = "medium"):
-    """Генерирует испытание."""
+async def generate_common_test(request: Request, difficulty: str = "medium", filter_type: int = 1):
+    """Общие действия для генерации тестов: bandpass-gain и bandstop."""
     username = get_user_id(request)
     
     async with httpx.AsyncClient() as client:
@@ -48,15 +42,15 @@ async def generate_test(request: Request, difficulty: str = "medium"):
         if user_response.status_code != 200:
             raise HTTPException(status_code=404, detail="User not found")
         user_data = user_response.json()
-        print(user_data)
         user_id = user_data["user_id"]
         
     # Определяем параметры фильтра в зависимости от сложности
-    filter_width = random.uniform(200, 1000) if difficulty == "easy" else random.uniform(100, 500) if difficulty == "medium" else random.uniform(50, 200)
-    filter_freq = random.uniform(300, 15000)
+    filter_width = random.uniform(1500, 1000) if difficulty == "easy" else random.uniform(700, 1000) if difficulty == "medium" else random.uniform(200, 500)
+    filter_freq = random.uniform(1600, 18000)
     gain = 15 if difficulty == "easy" else 10 if difficulty == "medium" else 5
     
-    processed_audio = one_band_eq(original_audio, filter_width, filter_freq, gain)
+    # Обрабатываем фильтр в зависимости от типа (bandpass или bandstop)
+    processed_audio = one_band_eq(original_audio, filter_width, filter_freq, gain if filter_type == 1 else -1)
 
     original_audio_base64 = base64.b64encode(original_audio).decode('utf-8')
     processed_audio_base64 = base64.b64encode(processed_audio).decode('utf-8')
@@ -66,7 +60,6 @@ async def generate_test(request: Request, difficulty: str = "medium"):
         "filter_freq": filter_freq,
         "filter_width": filter_width
     }
-    print(user_id)
     
     return {
         "original_audio": original_audio_base64,
@@ -75,9 +68,38 @@ async def generate_test(request: Request, difficulty: str = "medium"):
         "filter_freq": filter_freq,
     }
 
+@router.get("/tests/bandpass-gain")
+async def get_bandpass_test_page(request: Request):
+    """Отображает страницу теста для bandpass."""
+    return templates.TemplateResponse("bandpass_gain_test.html", {"request": request})
+
+@router.get("/generate-test/bandpass-gain")
+async def generate_bandpass_test(request: Request, difficulty: str = "medium"):
+    """Генерирует испытание для bandpass-gain."""
+    return await generate_common_test(request, difficulty, filter_type=1)
+
+@router.get("/tests/bandstop")
+async def get_bandstop_test_page(request: Request):
+    """Отображает страницу теста для bandstop."""
+    return templates.TemplateResponse("bandstop_test.html", {"request": request})
+
+@router.get("/generate-test/bandstop")
+async def generate_bandstop_test(request: Request, difficulty: str = "medium"):
+    """Генерирует испытание для bandstop."""
+    return await generate_common_test(request, difficulty, filter_type=2)
+
 @router.post("/submit-test/bandpass-gain")
-async def submit_test(request: Request, selected_freq: float = Form(...)):
-    """Обрабатывает результат теста и сохраняет его."""
+async def submit_bandpass_test(request: Request, selected_freq: float = Form(...)):
+    """Обрабатывает результат теста bandpass-gain и сохраняет его."""
+    return await submit_test(request, selected_freq, filter_type=1)
+
+@router.post("/submit-test/bandstop")
+async def submit_bandstop_test(request: Request, selected_freq: float = Form(...)):
+    """Обрабатывает результат теста bandstop и сохраняет его."""
+    return await submit_test(request, selected_freq, filter_type=2)
+
+async def submit_test(request: Request, selected_freq: float, filter_type: int):
+    """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
     test_data = request.session.get("test_data")
     if not test_data:
         raise HTTPException(status_code=400, detail="No active test session")
@@ -90,7 +112,7 @@ async def submit_test(request: Request, selected_freq: float = Form(...)):
     async with httpx.AsyncClient() as client:
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": test_data["user_id"],
-            "type_id": 1,
+            "type_id": filter_type,  # В зависимости от типа фильтра
             "score": int(score)
         })
     
