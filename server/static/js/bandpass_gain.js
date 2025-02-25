@@ -1,10 +1,10 @@
-console.log("Скрипт загружен")
+console.log("Скрипт загружен");
 let testData;
 let originalAnalyzer, processedAnalyzer;
 
 // Запрашиваем тест
 async function fetchTest() {
-    console.log("fetchTest")
+    console.log("fetchTest");
     const response = await fetch("/generate-test/bandpass-gain?difficulty=medium");
     testData = await response.json();
 
@@ -23,9 +23,14 @@ function base64ToBlob(base64) {
     return new Blob([new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)))], { type: "audio/wav" });
 }
 
+// Обновление значения частоты, когда ползунок изменяется
+document.getElementById("frequency").addEventListener("input", function() {
+    document.getElementById("frequency-value").innerText = this.value;
+});
+
 // Отправка результата
 function submitAnswer(event) {
-    console.log("submitAnswer")
+    console.log("submitAnswer");
     event.preventDefault();
     
     const selectedFreq = parseFloat(document.getElementById("frequency").value);
@@ -40,13 +45,28 @@ function submitAnswer(event) {
         showResult(`Вы выбрали ${data.selected_freq} Гц. Истинное значение: ${data.real_freq} Гц. Оценка: ${data.score}`);
         showAnalyzers();
         setupAnalyzers();
+
+        // Меняем текст кнопки на "Далее" и перенаправляем
+        const button = document.getElementById("submit-button");
+        button.innerText = "Далее";
+        button.onclick = function() {
+            window.location.href = "/profile"; // Перенаправление на /profile
+        };
+
+        // Скрываем ползунок, метку и отображаемое значение
+        document.getElementById("frequency").style.display = "none";
+        document.getElementById("frequency-value").style.display = "none";
+        document.querySelector("label[for='frequency']").style.display = "none"; // Скрываем label
+        document.querySelector("span[for='frequency']").style.display = "none"; // Скрываем span
     })
     .catch(error => console.error("Ошибка отправки:", error));
 }
 
+
+
 // Отображение результата
 function showResult(text) {
-    console.log("showResult")
+    console.log("showResult");
     const resultContainer = document.getElementById("result-container");
     const resultText = document.getElementById("result-text");
 
@@ -54,12 +74,18 @@ function showResult(text) {
     resultContainer.classList.add("visible");
 }
 
-// Плавное появление анализаторов
+// Плавное расширение контейнера и проявление анализаторов
 function showAnalyzers() {
     console.log("showAnalyzers");
 
+    // Плавное расширение контейнера для анализаторов
+    document.querySelectorAll(".audio-block").forEach(block => {
+        block.classList.add("visible");
+    });
+
+    // Плавное проявление самих анализаторов
     document.querySelectorAll(".audio-block canvas").forEach(canvas => {
-        canvas.classList.add("visible");  // Отображаем сами канвасы
+        canvas.classList.add("visible");
     });
 }
 

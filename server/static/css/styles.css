@@ -173,33 +173,41 @@ audio::-webkit-media-controls-volume-slider {
     }
 }
 
+/* === Контейнер для аудио и анализаторов === */
 .audio-block {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 20px;
-    transition: height 0.8s ease-in-out;
+    max-height: 200px; /* Изначально ограничиваем максимальную высоту */
+    overflow: hidden;
+    transition: max-height 1s ease-out; /* Анимация плавного увеличения */
+    background: rgba(50, 50, 50, 0.8); /* Тонкая полупрозрачная заливка */
+    border-radius: 10px; /* Скругление углов */
 }
 
-canvas {
-    background: #222;
-    border-radius: 8px;
+/* === Когда добавляется класс .visible, максимальная высота увеличивается */
+.audio-block.visible {
+    max-height: 400px; /* Увеличиваем максимальную высоту, чтобы вместить канвасы */
 }
 
-#test-container.show-analyzers canvas {
-    display: block;
-}
-
+/* === Канвас для анализаторов === */
 canvas {
     display: none;
     opacity: 0;
-    transition: opacity 0.8s ease-in-out;
+    transition: opacity 1s ease-in-out; /* Плавное проявление */
+    background: rgba(255, 255, 255, 0.1); /* Прозрачный светлый фон для контраста */
+    border: 2px solid #BB86FC; /* Граница для выделения */
+    border-radius: 10px; /* Скругленные углы */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* Легкий светлый тень */
 }
 
 canvas.visible {
     display: block;
     opacity: 1;
 }
+
+
 
 /* Фиксированное окно результатов */
 #result-container {
