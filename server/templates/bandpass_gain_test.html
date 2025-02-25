@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Тест на тембральный слух</h2>
+
+<!-- Панель с результатами -->
+<div id="result-container">
+    <p id="result-text"></p>
+</div>
+
+<div id="test-container">
+    <p>Прослушайте оба аудиофайла и выберите центральную частоту усиленной полосы.</p>
+
+    <div class="audio-block">
+        <canvas id="original-analyzer" width="500" height="200"></canvas>
+        <audio id="original-audio" controls></audio>
+    </div>
+
+    <div class="audio-block">
+        <canvas id="processed-analyzer" width="500" height="200"></canvas>
+        <audio id="processed-audio" controls></audio>
+    </div>
+</div>
+
+<form onsubmit="submitAnswer(event)">
+    <label for="frequency">Введите центральную частоту (Гц):</label>
+    <input type="number" id="frequency" name="selected_freq" required>
+    <button type="submit">Подтвердить</button>
+</form>
+
+<!-- Подключаем JS -->
+<script src="{{ url_for('static', path='js/bandpass_gain.js') }}"></script>
+
+{% endblock %}

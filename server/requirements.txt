@@ -12,3 +12,5 @@ jinja2
 bcrypt 
 fastapi-login
 httpx
+python-jose
+itsdangerous

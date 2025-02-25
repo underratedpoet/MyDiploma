@@ -1,10 +1,10 @@
 import os
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Body
 from typing import List
 from manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
 
-from utils.shemas import User, Test
+from utils.shemas import User, Test, UserUpdate
 
 app = FastAPI()
 
@@ -22,6 +22,12 @@ def add_user(user: User):
     db.add_user(user)
     return {"message": "User added successfully"}
 
+@app.post("/users/register")
+def register_user(user: User):
+    success = db.add_user(user)
+    if success:
+        return {"message": "User registered successfully"}
+    raise HTTPException(status_code=400, detail="User already exists")
 
 @app.post("/tests/")
 def add_test(test: Test):
@@ -34,21 +40,61 @@ def delete_user(user_id: int):
     db.delete_user(user_id)
     return {"message": "User deleted successfully"}
 
-
-@app.put("/users/{user_id}")
-def update_user(user_id: int, user: User):
-    success = db.update_user(user_id, **user.dict(exclude_unset=True))
+@app.put("/users/{username}")
+def update_user(username: str, user: UserUpdate = Body(...)):
+    """Обновляет данные пользователя (без изменения пароля)."""
+    success = db.update_user(username, user)
+    
     if success:
         return {"message": "User updated successfully"}
+    
     raise HTTPException(status_code=400, detail="Invalid update parameters")
 
+@app.get("/confirm_update/{token}")
+async def confirm_update(token: str):
+    """Подтверждает изменения, если токен действителен"""
+    # Инициализация менеджера базы данных
+    
+    # Попытка обновить данные пользователя с помощью токена
+    if db.update_user_with_token_data(token):
+        return {"message": "Profile updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid or expired confirmation token")
 
-@app.get("/users/verify")
-def verify_user_credentials(username: str, password_hash: str):
-    if db.verify_user_credentials(username, password_hash):
-        return {"message": "Credentials are valid"}
+@app.post("/users/authenticate")
+def authenticate_user(data: dict):
+    """Проверяет соответствие хэша пароля и имени пользователя"""
+    username = data.get("username")
+    password_hash = data.get("password_hash")
+    
+    query = "SELECT * FROM users WHERE username = %s AND password_hash = %s"
+    user = db.fetch_one(query, (username, password_hash))
+
+    if user:
+        return {"username": user["username"], "email": user["email"], "role": user["role"]}
+
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
+@app.get("/users/{username}")
+def get_user(username: str):
+    """Возвращает данные пользователя по `username`"""
+    user = db.get_user_by_username(username)
+    if user:
+        return user
+    raise HTTPException(status_code=404, detail="User not found")
+
+@app.get("/users/get_password_hash/{username}")
+def get_password_hash(username: str):
+    """Возвращает хеш пароля пользователя"""
+    query = "SELECT password_hash FROM users WHERE username = %s"
+    db.cursor.execute(query, (username,))
+    result = db.cursor.fetchone()
+    print(result, username)
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    return {"password_hash": result["password_hash"]}
 
 @app.get("/test_categories/", response_model=List[Test])
 def get_all_test_categories():

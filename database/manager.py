@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from psycopg2.extras import RealDictCursor
 import psycopg2
 
@@ -20,12 +22,77 @@ class PostgresDBManager:
         self.cursor.execute(query, params)
         self.connection.commit()
 
+    def fetch_one(self, query: str, params: tuple = ()):
+        """Выполняет SQL-запрос и возвращает одну запись."""
+        self.cursor.execute(query, params)
+        return self.cursor.fetchone()
+
     def add_user(self, user: User):
         query = """
         INSERT INTO users (username, password_hash, first_name, last_name, email, phone_number, role)
         VALUES (%s, %s, %s, %s, %s, %s, %s);
         """
         self._execute(query, (user.username, user.password_hash, user.first_name, user.last_name, user.email, user.phone_number, user.role))
+
+    def user_exists(self, username: str, email: str) -> bool:
+        """Проверяет, существует ли пользователь с таким username или email."""
+        query = "SELECT user_id FROM users WHERE username = %s OR email = %s"
+        self.cursor.execute(query, (username, email))
+        return bool(self.cursor.fetchone())
+
+    def add_user(self, user: User):
+        """Добавляет нового пользователя, если он не существует."""
+        if self.user_exists(user.username, user.email):
+            return False  # Пользователь уже существует
+
+        query = """
+        INSERT INTO users (username, password_hash, first_name, last_name, email, phone_number, role)
+        VALUES (%s, %s, %s, %s, %s, %s, %s);
+        """
+        self._execute(query, (user.username, user.password_hash, user.first_name, user.last_name, user.email, user.phone_number, user.role))
+        return True  # Пользователь успешно добавлен
+
+    def verify_user_credentials(self, username: str, password_hash: str) -> dict | None:
+        """Проверяет существование пользователя с данным логином и хэшем пароля."""
+        query = "SELECT username, email, role FROM users WHERE username = %s AND password_hash = %s"
+        return self.fetch_one(query, (username, password_hash))
+
+    def get_user_by_username(self, username: str):
+        """Получает данные пользователя по его `username`"""
+        query = "SELECT user_id, username, first_name, last_name, email, phone_number, role FROM users WHERE username = %s;"
+        self.cursor.execute(query, (username,))
+        user = self.cursor.fetchone()
+        return user if user else None
+    
+    def update_user(self, username: str, user: User) -> bool:
+        """Обновляет данные пользователя, кроме пароля."""
+        fields = []
+        values = []
+
+        if user.first_name is not None:
+            fields.append("first_name = %s")
+            values.append(user.first_name)
+
+        if user.last_name is not None:
+            fields.append("last_name = %s")
+            values.append(user.last_name)
+
+        if user.email is not None:
+            fields.append("email = %s")
+            values.append(user.email)
+
+        if user.phone_number is not None:
+            fields.append("phone_number = %s")
+            values.append(user.phone_number)
+
+        if not fields:
+            return False  # Если нет данных для обновления
+
+        query = f"UPDATE users SET {', '.join(fields)} WHERE username = %s;"
+        values.append(username)
+
+        self._execute(query, tuple(values))
+        return True  # Пользователь успешно обновлен
 
     def add_test(self, test: Test):
         query = "INSERT INTO tests (user_id, type_id, score) VALUES (%s, %s, %s);"
@@ -34,25 +101,6 @@ class PostgresDBManager:
     def delete_user(self, user_id: int):
         query = "DELETE FROM users WHERE user_id = %s;"
         self._execute(query, (user_id,))
-
-    def update_user(self, user_id: int, **kwargs):
-        """Обновляет данные пользователя по user_id"""
-        allowed_fields = {"username", "first_name", "last_name", "email", "phone_number", "role"}
-        updates = [f"{key} = %s" for key in kwargs if key in allowed_fields]
-        values = tuple(kwargs[key] for key in kwargs if key in allowed_fields)
-
-        if not updates:
-            return False
-
-        query = f"UPDATE users SET {', '.join(updates)} WHERE user_id = %s"
-        self._execute(query, values + (user_id,))
-        return True
-
-    def verify_user_credentials(self, username: str, password_hash: str) -> bool:
-        """Проверяет, существует ли пользователь с данным логином и хешем пароля"""
-        query = "SELECT user_id FROM users WHERE username = %s AND password_hash = %s"
-        self.cursor.execute(query, (username, password_hash))
-        return bool(self.cursor.fetchone())
 
     def get_all_test_categories(self) -> list[TestCategory]:
         """Получает список всех категорий тестов"""

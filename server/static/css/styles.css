@@ -83,3 +83,138 @@ button:hover {
 .nav-links a:hover {
     background: #444;
 }
+
+.avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+form {
+    margin-top: 10px;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+input, button {
+    display: block;
+    margin-top: 5px;
+    padding: 8px;
+}
+
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* === Стили для аудиоплееров === */
+#test-container {
+    margin-top: 20px;
+    padding: 20px;
+    background: #1E1E1E;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+}
+
+#test-container p {
+    font-size: 18px;
+    color: #E0E0E0;
+    margin-bottom: 15px;
+}
+
+audio {
+    width: 100%;
+    max-width: 500px;
+    margin: 10px 0;
+    background: #333;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+audio::-webkit-media-controls-panel {
+    background: #292929;
+    border-radius: 8px;
+}
+
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    color: #BB86FC;
+}
+
+audio::-webkit-media-controls-volume-slider {
+    background: #BB86FC;
+}
+
+/* Добавляем стили для визуального различия оригинального и обработанного аудио */
+#original-audio {
+    border: 2px solid #BB86FC;
+}
+
+#processed-audio {
+    border: 2px solid #FF79C6;
+}
+
+/* Дополнительные отступы для мобильных устройств */
+@media (max-width: 600px) {
+    audio {
+        max-width: 100%;
+    }
+}
+
+.audio-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    transition: height 0.8s ease-in-out;
+}
+
+canvas {
+    background: #222;
+    border-radius: 8px;
+}
+
+#test-container.show-analyzers canvas {
+    display: block;
+}
+
+canvas {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+}
+
+canvas.visible {
+    display: block;
+    opacity: 1;
+}
+
+/* Фиксированное окно результатов */
+#result-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 1.2em;
+    transform: translateY(-100%);
+    transition: transform 0.5s ease-in-out;
+}
+#result-container.visible {
+    transform: translateY(0);
+}

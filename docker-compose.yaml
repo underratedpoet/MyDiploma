@@ -57,8 +57,6 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-    ports:
-      - "8082:8000"
 
   server:
     build:
@@ -66,12 +64,25 @@ services:
       dockerfile: ./server/Dockerfile
     restart: always
     environment:
-      DB_API_URL: "http://db-api:8082"
+      DB_API_URL: "http://db-api:8000"
+      FILE_API_URL: "http://file-api:8000"
+      SECRET_KEY: "supersecretkey"
+      FRONTEND_URL: "http://localhost:8080"
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      FROM_EMAIL: your_email@example.com
     depends_on:
       db_init:
         condition: service_completed_successfully
     ports:
       - "8080:8000"
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"  # Порт для SMTP
+      - "8025:8025"  # Веб-интерфейс
 
 volumes:
   postgres_data:

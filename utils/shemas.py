@@ -1,5 +1,11 @@
 from pydantic import BaseModel, EmailStr, Field
 
+class UserUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone_number: str | None = None
+
 # Pydantic модели
 class User(BaseModel):
     username: str

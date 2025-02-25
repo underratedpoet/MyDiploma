@@ -1,10 +1,107 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Привет, {{ user.username }}!</h2>
+<h2>Привет, <span id="username">{{ user.username }}</span>!</h2>
 <p>Это твой личный кабинет.</p>
+
+<!-- Аватар -->
+<img id="avatar" src="{{ avatar_url }}" alt="Avatar" class="avatar" onclick="uploadAvatar()">
+
+<!-- Форма редактирования профиля -->
+<form id="profile-form">
+    <label>Имя:</label>
+    <input type="text" id="first_name" name="first_name" value="{{ user.first_name or '' }}" disabled>
+
+    <label>Фамилия:</label>
+    <input type="text" id="last_name" name="last_name" value="{{ user.last_name or '' }}" disabled>
+
+    <label>Email:</label>
+    <input type="email" id="email" name="email" value="{{ user.email }}" disabled>
+
+    <label>Телефон:</label>
+    <input type="text" id="phone_number" name="phone_number" value="{{ user.phone_number or '' }}" disabled>
+
+    <!-- Кнопки управления -->
+    <button type="button" id="edit-btn" onclick="enableEditing()">Изменить профиль</button>
+    <button type="button" id="save-btn" onclick="saveProfile()" style="display: none;">Сохранить</button>
+</form>
 
 <div class="nav-links">
     <a href="/logout">Выйти</a>
 </div>
+
+<!-- Стили -->
+<style>
+    .avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .avatar:hover {
+        opacity: 0.8;
+    }
+</style>
+
+<!-- Скрипты -->
+<script>
+function enableEditing() {
+    document.getElementById("first_name").disabled = false;
+    document.getElementById("last_name").disabled = false;
+    document.getElementById("email").disabled = false;
+    document.getElementById("phone_number").disabled = false;
+
+    document.getElementById("edit-btn").style.display = "none";
+    document.getElementById("save-btn").style.display = "block";
+}
+
+async function saveProfile() {
+    let formData = new FormData();
+    formData.append("first_name", document.getElementById("first_name").value);
+    formData.append("last_name", document.getElementById("last_name").value);
+    formData.append("email", document.getElementById("email").value);
+    formData.append("phone_number", document.getElementById("phone_number").value);
+
+    let response = await fetch("/update_profile", {
+        method: "POST",
+        body: formData
+    });
+
+    if (response.ok) {
+        alert("Профиль обновлен!");
+        location.reload();
+    } else {
+        alert("Ошибка обновления профиля");
+    }
+}
+
+function uploadAvatar() {
+    let input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/jpeg, image/png";
+    
+    input.addEventListener("change", async function () {
+        let file = input.files[0];
+        if (file) {
+            let formData = new FormData();
+            formData.append("file", file);
+
+            let response = await fetch("/upload_avatar", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("Аватар обновлен!");
+                location.reload();
+            } else {
+                alert("Ошибка загрузки аватара");
+            }
+        }
+    });
+
+    input.click();
+}
+</script>
 {% endblock %}
