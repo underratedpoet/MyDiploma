@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Тест на тембральный слух</h2>
+
+<!-- Панель с результатами -->
+<div id="result-container">
+    <p id="result-text"></p>
+</div>
+
+<div id="test-container">
+    <p>Прослушайте оба аудиофайла и выберите, какой из эффектов используется во втором аудиофайле.</p>
+
+    <div class="audio-block">
+        <audio id="original-audio" controls></audio>
+    </div>
+
+    <div class="audio-block">
+        <audio id="processed-audio" controls></audio>
+    </div>
+</div>
+
+<form onsubmit="submitAnswer(event)">
+    <label for="effect">Выберите эффект:</label>
+    <select name="effect" id="effect-select">
+        <option value="No effect">No effect</option>
+        <option value="Reverb">Reverb</option>
+        <option value="Delay">Delay</option>
+        <option value="Distortion">Distortion (Clipping)</option>
+        <option value="Tremolo">Tremolo</option>
+        <option value="Flanger">Flanger</option>
+        <option value="Chorus">Chorus</option>
+        <option value="Vibrato">Vibrato</option>
+        <option value="Compression">Compression</option>
+        <option value="Saturation">Saturation</option>
+      </select>
+    <button type="submit" id="submit-button">Подтвердить</button>
+</form>
+
+<!-- Подключаем JS -->
+<script src="{{ url_for('static', path='js/effects_test.js') }}"></script>
+
+{% endblock %}

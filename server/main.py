@@ -8,7 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import RedirectResponse
   
-from routes import home, auth, profile, timbre_tests
+from routes import home, auth, profile, timbre_tests, harmonic_tests
 
 app = FastAPI()
 
@@ -33,6 +33,7 @@ app.include_router(home.router)
 app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(timbre_tests.router)
+app.include_router(harmonic_tests.router)
 
 # Подключаем статику (CSS, JS)
 app.mount('/static', StaticFiles(directory='static'), 'static')

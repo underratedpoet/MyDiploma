@@ -6,6 +6,7 @@ import wave
 import numpy as np
 import scipy.signal as signal
 import soundfile as sf
+import random
 
 def one_band_eq(wav_bytes: bytes, filter_width: float, filter_freq: float, gain: float) -> bytes:
     """
@@ -153,42 +154,112 @@ def audiosegment_to_bytes(audio: AudioSegment) -> bytes:
     return buffer.getvalue()
 
 # 🎶 1. Реверберация (Reverb)
-def apply_reverb(audio_bytes: bytes, decay: float = 0.3) -> bytes:
+def apply_reverb(audio_bytes: bytes, decay: float = 0.4, delay_ms: int = 50) -> bytes:
+    """
+    Добавляет эффект реверберации (Reverb) к аудиофайлу.
+    :param audio_bytes: Байтовая строка аудиофайла (WAV)
+    :param decay: Степень затухания (0.2-0.8), чем выше, тем больше эхо.
+    :param delay_ms: Задержка отражения (10-100 мс), влияет на размер помещения.
+    :return: Обработанный аудиофайл в байтах
+    """
     audio = bytes_to_audiosegment(audio_bytes)
-    samples = np.array(audio.get_array_of_samples(), dtype=np.float32) / np.iinfo(audio.array_type).max
-    reverb_filter = np.exp(-np.linspace(0, decay, len(samples)))
-    processed_samples = np.convolve(samples, reverb_filter, mode='same')
-    processed_samples = np.clip(processed_samples, -1, 1) * np.iinfo(audio.array_type).max
-    processed_audio = audio._spawn(processed_samples.astype(audio.array_type).tobytes())
+    frame_rate = audio.frame_rate
+    samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
+
+    # Преобразуем задержку из мс в количество сэмплов
+    delay_samples = int(frame_rate * delay_ms / 1000)
+
+    # Создаем пустой массив для отражений
+    reverb_samples = np.zeros(len(samples) + delay_samples * 10)  # 10 отражений
+
+    # Добавляем оригинальный сигнал
+    reverb_samples[:len(samples)] += samples
+
+    # Добавляем затухающие отражения
+    for i in range(1, 10):
+        reverb_samples[i * delay_samples:i * delay_samples + len(samples)] += samples * (decay ** i)
+
+    # Обрезаем до оригинального размера
+    reverb_samples = reverb_samples[:len(samples)]
+
+    # Ограничиваем значения
+    max_value = np.iinfo(np.int32).max
+    reverb_samples = np.clip(reverb_samples, -max_value, max_value).astype(np.int32)
+
+    # Преобразуем массив обратно в аудио
+    processed_audio = audio._spawn(reverb_samples.tobytes())
     return audiosegment_to_bytes(processed_audio)
 
 # 🎶 2. Дилей (Delay)
 def apply_delay(audio_bytes: bytes, delay_ms: int = 300, decay: float = 0.5) -> bytes:
+    # Преобразуем байты в объект AudioSegment
     audio = bytes_to_audiosegment(audio_bytes)
+    # Вычисляем количество сэмплов для задержки
     delay_samples = int(audio.frame_rate * delay_ms / 1000)
-    samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
+    # Получаем сэмплы аудио как массив
+    samples = np.array(audio.get_array_of_samples(), dtype=np.float32) 
+    # Создаем массив для задержанных сэмплов
     delayed_samples = np.zeros(len(samples) + delay_samples)
+    # Копируем оригинальные сэмплы в начало
     delayed_samples[:len(samples)] = samples
+    # Добавляем сэмплы с задержкой с учетом коэффициента затухания
     delayed_samples[delay_samples:] += samples * decay
-    processed_audio = audio._spawn((delayed_samples[:len(samples)] * np.iinfo(audio.array_type).max).astype(audio.array_type).tobytes())
+    # Ограничиваем сэмплы в диапазоне допустимых значений для 16-битных аудиоформатов
+    max_value = np.iinfo(np.int32).max
+    delayed_samples = np.clip(delayed_samples, -max_value, max_value)
+    # Преобразуем сэмплы обратно в целочисленные значения
+    processed_samples = delayed_samples.astype(np.int32)
+    # Создаем новый объект AudioSegment из обработанных сэмплов
+    processed_audio = audio._spawn(processed_samples.tobytes())
+    # Преобразуем аудио обратно в байты и возвращаем
     return audiosegment_to_bytes(processed_audio)
 
 # 🎶 3. Сатурация (Saturation) – мягкое аналоговое насыщение
 def apply_saturation(audio_bytes: bytes, amount: float = 0.5) -> bytes:
     audio = bytes_to_audiosegment(audio_bytes)
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
+    max_value = np.iinfo(np.int32).max  # Для 32-битного аудио
+    samples /= max_value
+
     processed_samples = np.tanh(samples * amount)  # Сатурация через гиперболический тангенс
-    processed_samples = (processed_samples * np.iinfo(audio.array_type).max).astype(audio.array_type)
+    saturated_samples = (processed_samples * np.iinfo(audio.array_type).max).astype(audio.array_type)
+
+    samples *= max_value
+    saturated_samples = np.clip(saturated_samples, -max_value, max_value)
+    # Преобразуем сэмплы обратно в целочисленные значения
+    processed_samples = saturated_samples.astype(np.int32)
+    # Создаем новый объект AudioSegment из обработанных сэмплов
     processed_audio = audio._spawn(processed_samples.tobytes())
+    # Преобразуем аудио обратно в байты и возвращаем
     return audiosegment_to_bytes(processed_audio)
 
-# 🎶 4. Перегруз (Distortion) – жесткое цифровое ограничение
 def apply_distortion(audio_bytes: bytes, gain: float = 10) -> bytes:
+    # Преобразуем байты в объект AudioSegment
     audio = bytes_to_audiosegment(audio_bytes)
-    samples = np.array(audio.get_array_of_samples(), dtype=np.float32) * gain
-    samples = np.clip(samples, -1, 1)  # Жесткое ограничение перегруза
-    processed_samples = (samples * np.iinfo(audio.array_type).max).astype(audio.array_type)
+    
+    # Получаем сэмплы аудио как массив
+    samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
+
+    max_value = np.iinfo(np.int32).max  # Для 32-битного аудио
+    print(min(samples), max(samples))
+    samples /= max_value
+    #
+    ## Применяем усиление (гейн)
+    samples *= gain
+    #print(samples)
+    ## Применяем жесткое ограничение перегруза (ограничиваем в диапазоне [-1, 1])
+    samples = np.clip(samples, -1, 1)
+    samples *= max_value
+    
+    # Преобразуем сэмплы обратно в целочисленные значения с учетом максимума для 32-битного формата
+    distorted_samples = np.clip(samples, -max_value, max_value)
+    # Преобразуем сэмплы обратно в целочисленные значения
+    processed_samples = distorted_samples.astype(np.int32)
+    
+    # Создаем новый объект AudioSegment из обработанных сэмплов
     processed_audio = audio._spawn(processed_samples.tobytes())
+    
+    # Возвращаем аудио в формате байтов
     return audiosegment_to_bytes(processed_audio)
 
 # 🎶 5. Компрессия (Compression)
@@ -198,21 +269,88 @@ def apply_compression(audio_bytes: bytes, threshold: float = -20, ratio: float =
     return audiosegment_to_bytes(compressed_audio)
 
 # 🎶 6. Модуляция – Хорус (Chorus)
-def apply_chorus(audio_bytes: bytes, rate_hz: float = 1.5, depth: int = 25) -> bytes:
+def apply_chorus(audio_bytes: bytes, rate_hz: float = 1.5, depth_ms: int = 25) -> bytes:
+    """
+    Добавляет эффект хорус (chorus) к аудиофайлу.
+    :param audio_bytes: Байтовая строка аудиофайла (WAV)
+    :param rate_hz: Частота модуляции задержки (0.5 - 3 Гц)
+    :param depth_ms: Глубина модуляции задержки (обычно 20-30 мс)
+    :return: Обработанный аудиофайл в байтах
+    """
     audio = bytes_to_audiosegment(audio_bytes)
+    frame_rate = audio.frame_rate
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
-    mod_signal = np.sin(2 * np.pi * np.arange(len(samples)) * rate_hz / audio.frame_rate) * depth
-    modulated_samples = np.interp(np.arange(len(samples)) + mod_signal, np.arange(len(samples)), samples)
-    processed_audio = audio._spawn((modulated_samples * np.iinfo(audio.array_type).max).astype(audio.array_type).tobytes())
+    
+    # Переводим задержку в сэмплы
+    max_delay_samples = int((depth_ms / 1000) * frame_rate)
+
+    # Генерируем сигнал модуляции (синусоидальный LFO)
+    time = np.arange(len(samples))
+    lfo = np.sin(2 * np.pi * rate_hz * time / frame_rate)  # LFO-генератор (модулирует задержку)
+
+    # Рассчитываем изменяющуюся задержку (LFO изменяет время задержки)
+    modulated_delay = ((lfo + 1) / 2) * max_delay_samples  # Диапазон: [0, max_delay_samples]
+
+    # Создаём новый массив с задержкой
+    delayed_samples = np.zeros_like(samples)
+    for i in range(len(samples)):
+        delay = int(modulated_delay[i])  # Получаем текущую задержку в сэмплах
+        if i - delay >= 0:
+            delayed_samples[i] = samples[i - delay]  # Задержанный сигнал
+
+    # Смешиваем оригинальный и задержанный сигнал (50/50)
+    chorus_samples = (samples + delayed_samples) / 2
+
+    # Ограничение значений
+    max_value = np.iinfo(np.int32).max
+    chorus_samples = np.clip(chorus_samples, -max_value, max_value).astype(np.int32)
+
+    # Преобразуем массив обратно в аудио
+    processed_audio = audio._spawn(chorus_samples.tobytes())
     return audiosegment_to_bytes(processed_audio)
 
 # 🎶 7. Модуляция – Флэнджер (Flanger)
-def apply_flanger(audio_bytes: bytes, rate_hz: float = 0.25, depth: int = 5) -> bytes:
+def apply_flanger(audio_bytes: bytes, rate_hz: float = 0.5, depth_ms: int = 10, feedback: float = 0.5) -> bytes:
+    """
+    Добавляет эффект флэнджер (flanger) к аудиофайлу.
+    :param audio_bytes: Байтовая строка аудиофайла (WAV)
+    :param rate_hz: Частота модуляции задержки (0.1 - 3 Гц)
+    :param depth_ms: Глубина модуляции задержки (обычно 5-15 мс)
+    :param feedback: Коэффициент обратной связи (0 - без обратной связи, 1 - сильный резонанс)
+    :return: Обработанный аудиофайл в байтах
+    """
     audio = bytes_to_audiosegment(audio_bytes)
+    frame_rate = audio.frame_rate
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
-    mod_signal = np.sin(2 * np.pi * np.arange(len(samples)) * rate_hz / audio.frame_rate) * depth
-    flanged_samples = (samples + np.interp(np.arange(len(samples)) - mod_signal, np.arange(len(samples)), samples)) / 2
-    processed_audio = audio._spawn((flanged_samples * np.iinfo(audio.array_type).max).astype(audio.array_type).tobytes())
+    
+    # Переводим глубину задержки в сэмплы
+    max_delay_samples = int((depth_ms / 1000) * frame_rate)
+
+    # Генерируем сигнал модуляции (LFO) для изменения задержки
+    time = np.arange(len(samples))
+    lfo = np.sin(2 * np.pi * rate_hz * time / frame_rate)  # Генератор низкой частоты
+
+    # Рассчитываем изменяющуюся задержку (LFO изменяет время задержки)
+    modulated_delay = ((lfo + 1) / 2) * max_delay_samples  # Диапазон: [0, max_delay_samples]
+
+    # Создаём массив для обработанных сэмплов
+    delayed_samples = np.zeros_like(samples)
+    
+    # Применяем задержку и обратную связь
+    for i in range(len(samples)):
+        delay = int(modulated_delay[i])  # Текущее значение задержки в сэмплах
+        if i - delay >= 0:
+            delayed_samples[i] = samples[i - delay] + delayed_samples[i - delay] * feedback  # Задержанный сигнал с обратной связью
+
+    # Смешиваем оригинальный и задержанный сигнал
+    flanger_samples = (samples + delayed_samples) / 2
+
+    # Ограничение значений
+    max_value = np.iinfo(np.int32).max
+    flanger_samples = np.clip(flanger_samples, -max_value, max_value).astype(np.int32)
+
+    # Преобразуем массив обратно в аудио
+    processed_audio = audio._spawn(flanger_samples.tobytes())
     return audiosegment_to_bytes(processed_audio)
 
 # 🎶 8. Модуляция – Тремоло по громкости
@@ -221,18 +359,112 @@ def apply_tremolo(audio_bytes: bytes, rate_hz: float = 5, depth: float = 0.5) ->
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
     mod_signal = 1 - (depth * (1 + np.sin(2 * np.pi * np.arange(len(samples)) * rate_hz / audio.frame_rate)) / 2)
     tremolo_samples = samples * mod_signal
-    processed_audio = audio._spawn((tremolo_samples * np.iinfo(audio.array_type).max).astype(audio.array_type).tobytes())
+
+    max_value = np.iinfo(np.int32).max
+    tremolo_samples = np.clip(tremolo_samples, -max_value, max_value)
+    # Преобразуем сэмплы обратно в целочисленные значения
+    processed_samples = tremolo_samples.astype(np.int32)
+    # Создаем новый объект AudioSegment из обработанных сэмплов
+    processed_audio = audio._spawn(processed_samples.tobytes())
+    # Преобразуем аудио обратно в байты и возвращаем
     return audiosegment_to_bytes(processed_audio)
 
 # 🎶 9. Модуляция – Тремоло по высоте (Vibrato)
-def apply_vibrato(audio_bytes: bytes, rate_hz: float = 5, depth: float = 10) -> bytes:
+def apply_vibrato(audio_bytes: bytes, rate_hz: float = 5, depth_semitones: float = 0.5) -> bytes:
+    """
+    Добавляет эффект частотного вибрато (Frequency Vibrato) к аудиофайлу.
+    :param audio_bytes: Байтовая строка аудиофайла (WAV)
+    :param rate_hz: Частота модуляции вибрато (3-8 Гц)
+    :param depth_semitones: Глубина модуляции (обычно 0.1 - 1.5 полутонов)
+    :return: Обработанный аудиофайл в байтах
+    """
     audio = bytes_to_audiosegment(audio_bytes)
+    frame_rate = audio.frame_rate
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
-    mod_signal = np.sin(2 * np.pi * np.arange(len(samples)) * rate_hz / audio.frame_rate) * depth
-    vibrato_samples = np.interp(np.arange(len(samples)) + mod_signal, np.arange(len(samples)), samples)
-    processed_audio = audio._spawn((vibrato_samples * np.iinfo(audio.array_type).max).astype(audio.array_type).tobytes())
+
+    # Генерируем сигнал модуляции (LFO) для изменения высоты звука
+    time = np.arange(len(samples))
+    vibrato_signal = np.sin(2 * np.pi * rate_hz * time / frame_rate) * depth_semitones
+
+    # Преобразуем глубину модуляции в коэффициент изменения частоты
+    pitch_factor = 2 ** (vibrato_signal / 12)  # Перевод полутонов в коэффициент частоты
+
+    # Применяем изменение частоты с интерполяцией
+    indices = np.arange(len(samples)) * pitch_factor
+    indices = np.clip(indices, 0, len(samples) - 1)  # Ограничиваем диапазон индексов
+    vibrato_samples = np.interp(indices, np.arange(len(samples)), samples)
+
+    # Ограничение значений
+    max_value = np.iinfo(np.int32).max
+    vibrato_samples = np.clip(vibrato_samples, -max_value, max_value).astype(np.int32)
+
+    # Преобразуем массив обратно в аудио
+    processed_audio = audio._spawn(vibrato_samples.tobytes())
     return audiosegment_to_bytes(processed_audio)
 
+# 🎵 Применение случайного эффекта с учетом сложности
+def apply_random_effect(audio_bytes: bytes, difficulty: str = "medium") -> tuple[bytes, str]:
+    """Применяет случайный эффект к аудиофайлу с разными уровнями сложности."""
+    def apply_no_effect(audio_bytes: bytes) -> bytes:
+        return audio_bytes
+
+    print("Before difficulty_params")
+    difficulty_params = {
+        "easy": {
+            "reverb_decay": 0.8, "reverb_delay": 100,
+            "delay_ms": 500, "delay_decay": 0.7,
+            "distortion_gain": 3,
+            "tremolo_rate": 5, "tremolo_depth": 0.8,
+            "vibrato_rate": 1.0, "vibrato_depth": 0.08,
+            "flanger_rate": 0.5, "flanger_depth": 8,
+            "chorus_rate": 0.7, "chorus_depth": 7,
+            "compression_th": -40, "compression_ratio" : 16,
+            "saturation": 3
+        },
+        "medium": {
+            "reverb_decay": 0.6, "reverb_delay": 75,
+            "delay_ms": 300, "delay_decay": 0.5,
+            "distortion_gain": 2,
+            "tremolo_rate": 7, "tremolo_depth": 0.6,
+            "vibrato_rate": 0.7, "vibrato_depth": 0.03,
+            "flanger_rate": 0.3, "flanger_depth": 5,
+            "chorus_rate": 0.5, "chorus_depth": 5,
+            "compression_th": -20, "compression_ratio" : 8,
+            "saturation": 2
+        },
+        "hard": {
+            "reverb_decay": 0.4, "reverb_delay": 50,
+            "delay_ms": 100, "delay_decay": 0.3,
+            "distortion_gain": 1.5,
+            "tremolo_rate": 10, "tremolo_depth": 0.3,
+            "vibrato_rate": 0.5, "vibrato_depth": 0.01,
+            "flanger_rate": 0.1, "flanger_depth": 2,
+            "chorus_rate": 1, "chorus_depth": 2,
+            "compression_th": -10, "compression_ratio" : 4,
+            "saturation": 1
+        }
+    }
+    
+    params = difficulty_params.get(difficulty, difficulty_params["medium"])
+    print("Before effects_list")
+    effects_list = [
+        ("Reverb", apply_reverb, [params["reverb_decay"]]), #OK
+        ("Delay", apply_delay, [params["delay_ms"], params["delay_decay"]]), #OK
+        ("Distortion", apply_distortion, [params["distortion_gain"]]), #OK
+        ("Tremolo", apply_tremolo, [params["tremolo_rate"], params["tremolo_depth"]]), #OK
+        ("Flanger", apply_flanger, [params["flanger_rate"], params["flanger_depth"]]), #OK
+        ("Chorus", apply_chorus, [params["chorus_rate"], params["chorus_depth"]]), #OK
+        ("Vibrato", apply_vibrato, [params["vibrato_rate"], params["vibrato_depth"]]), #OK
+        ("Compression", apply_compression, [params["compression_th"], params["compression_ratio"]]), #SUPER
+        ("Saturation", apply_saturation, [params["saturation"]]), #OK
+        ("No effect", apply_no_effect, [])
+    ]
+    
+    effect_name, effect_func, effect_args = random.choice(effects_list)
+    
+    modified_audio = effect_func(audio_bytes, *effect_args)
+    
+    return modified_audio, effect_name
 
 if __name__ == "__main__":
     # Пример использования

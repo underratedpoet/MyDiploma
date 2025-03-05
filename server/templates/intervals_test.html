@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Тест на гармонический слух</h2>
+
+<!-- Панель с результатами -->
+<div id="result-container">
+    <p id="result-text"></p>
+</div>
+
+<div id="test-container">
+    <p>Прослушайте аудиофайл и выберите проигрываемый в аудиофайле музыкальный интервал.</p>
+
+    <div class="audio-block">
+        <audio id="original-audio" controls></audio>
+    </div>
+</div>
+
+<form onsubmit="submitAnswer(event)">
+    <label for="interval">Выберите интервал:</label>
+    <select name="interval" id="interval-select">
+        <option value="0">Прима</option>
+        <option value="1">Малая секунда</option>
+        <option value="2">Большая секунда</option>
+        <option value="3">Малая терция</option>
+        <option value="4">Большая терция</option>
+        <option value="5">Кварта</option>
+        <option value="6">Тритон</option>
+        <option value="7">Квинта</option>
+        <option value="8">Малая секста</option>
+        <option value="9">Большая секста</option>
+        <option value="10">Малая септима</option>
+        <option value="11">Большая септима</option>
+        <option value="12">Октава</option>
+
+        <option value="13">Малая нона</option>
+        <option value="14">Большая нона</option>
+        <option value="15">Малая децима</option>
+        <option value="16">Большая децима</option>
+        <option value="17">Ундецима</option>
+        <option value="18">Увеличенная ундецима (уменьшенная дуодецима)</option>
+        <option value="19">Дуодецима</option>
+        <option value="20">Малая терцдецима</option>
+        <option value="21">Большая терцдецима</option>
+        <option value="22">Малая квартдецима</option>
+        <option value="23">Большая квартдецима</option>
+        <option value="24">Квинтдецима</option>
+      </select>
+    <button type="submit" id="submit-button">Подтвердить</button>
+</form>
+
+<!-- Подключаем JS -->
+<script src="{{ url_for('static', path='js/intervals_test.js') }}"></script>
+
+{% endblock %}
