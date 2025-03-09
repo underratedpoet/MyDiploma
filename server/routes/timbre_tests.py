@@ -68,7 +68,7 @@ async def generate_eq_test(request: Request, difficulty: str = "medium", filter_
         "filter_freq": filter_freq,
     }
 
-async def generate_effects_test(request: Request, difficulty: str = "medium"):
+async def do_generate_effects_test(request: Request, difficulty: str = "medium"):
     username = get_user_id(request)
     print("Before random-file")
     async with httpx.AsyncClient() as client:
@@ -112,14 +112,14 @@ async def generate_bandpass_test(request: Request, difficulty: str = "medium"):
     return await generate_eq_test(request, difficulty, filter_type=1)
 
 @router.get("/tests/effects")
-async def get_bandpass_test_page(request: Request):
+async def get_effects_test_page(request: Request):
     """Отображает страницу теста для effects."""
     return templates.TemplateResponse("effects_test.html", {"request": request})
 
 @router.get("/generate-test/effects")
-async def generate_bandpass_test(request: Request, difficulty: str = "medium"):
+async def generate_effects_test(request: Request, difficulty: str = "medium"):
     """Генерирует испытание для effects."""
-    return await generate_effects_test(request, difficulty)
+    return await do_generate_effects_test(request, difficulty)
 
 @router.get("/tests/bandstop")
 async def get_bandstop_test_page(request: Request):
@@ -134,19 +134,19 @@ async def generate_bandstop_test(request: Request, difficulty: str = "medium"):
 @router.post("/submit-test/bandpass-gain")
 async def submit_bandpass_test(request: Request, selected_freq: float = Form(...)):
     """Обрабатывает результат теста bandpass-gain и сохраняет его."""
-    return await submit_eq_test(request, selected_freq, filter_type=1)
+    return await do_submit_eq_test(request, selected_freq, filter_type=1)
 
 @router.post("/submit-test/bandstop")
 async def submit_bandstop_test(request: Request, selected_freq: float = Form(...)):
     """Обрабатывает результат теста bandstop и сохраняет его."""
-    return await submit_eq_test(request, selected_freq, filter_type=2)
+    return await do_submit_eq_test(request, selected_freq, filter_type=2)
 
 @router.post("/submit-test/effects")
-async def submit_bandstop_test(request: Request, selected_effect: str = Form(...)):
+async def submit_effects_test(request: Request, selected_effect: str = Form(...)):
     """Обрабатывает результат теста bandstop и сохраняет его."""
-    return await submit_effects_test(request, selected_effect)
+    return await do_submit_effects_test(request, selected_effect)
 
-async def submit_effects_test(request: Request, selected_effect: str):
+async def do_submit_effects_test(request: Request, selected_effect: str):
     """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
     test_data = request.session.get("test_data")
     if not test_data:
@@ -164,7 +164,7 @@ async def submit_effects_test(request: Request, selected_effect: str):
 
     return {"score": int(score), "real_effect": real_effect, "selected_effect": selected_effect}    
 
-async def submit_eq_test(request: Request, selected_freq: float, filter_type: int):
+async def do_submit_eq_test(request: Request, selected_freq: float, filter_type: int):
     """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
     test_data = request.session.get("test_data")
     if not test_data:

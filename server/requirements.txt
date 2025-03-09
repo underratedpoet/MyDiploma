@@ -4,6 +4,7 @@ soundfile
 pretty_midi
 pydub
 
+setuptools
 fastapi==0.100.0
 uvicorn==0.22.0
 python-multipart==0.0.6

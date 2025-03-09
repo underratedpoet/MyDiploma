@@ -226,3 +226,138 @@ canvas.visible {
 #result-container.visible {
     transform: translateY(0);
 }
+
+/* === Стили для выпадающих списков === */
+select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background: #333;
+    color: #E0E0E0;
+    border: 2px solid #BB86FC;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    appearance: none; /* Убираем стандартный стиль браузера */
+    -webkit-appearance: none; /* Для Safari */
+    -moz-appearance: none; /* Для Firefox */
+}
+
+/* Стили для стрелки выпадающего списка */
+select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23BB86FC'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+
+/* Стили для выпадающего списка при наведении */
+select:hover {
+    border-color: #FF79C6;
+}
+
+/* Стили для выпадающего списка в фокусе */
+select:focus {
+    outline: none;
+    border-color: #FF79C6;
+    box-shadow: 0 0 5px rgba(255, 121, 198, 0.5);
+}
+
+/* Стили для элементов выпадающего списка */
+select option {
+    background: #1E1E1E;
+    color: #E0E0E0;
+    padding: 10px;
+}
+
+/* Стили для недоступных выпадающих списков */
+select:disabled {
+    background: #444; /* Темный фон */
+    color: #666; /* Серый текст */
+    border-color: #666; /* Серый бордюр */
+    cursor: not-allowed; /* Курсор "недоступно" */
+}
+
+/* Стили для меток недоступных выпадающих списков */
+select:disabled + label {
+    color: #666; /* Серый текст для метки */
+}
+
+/* Стили для активного элемента (выбранного) */
+select option:checked {
+    background: #BB86FC;
+    color: #121212;
+}
+
+/* Стили для контейнера выпадающих списков */
+#steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+/* Стили для каждого блока с выпадающим списком */
+#steps-container div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Стили для меток (label) */
+#steps-container label {
+    color: #E0E0E0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Стили для столбцов диаграммы */
+.bar {
+    width: 30px;
+    background-color: #BB86FC;
+    transition: height 0.3s ease;
+}
+
+/* Цвета для разной величины разницы */
+.bar.good {
+    background-color: #4CAF50; /* Зеленый */
+}
+
+.bar.medium {
+    background-color: #FFC107; /* Желтый */
+}
+
+.bar.bad {
+    background-color: #F44336; /* Красный */
+}
+
+/* Стили для круглой кнопки */
+#click-button {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(145deg, #BB86FC, #9C27B0); /* Градиентный фон */
+    border-radius: 50%; /* Делаем кнопку круглой */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.19); /* Тень для объема */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Плавные анимации */
+    user-select: none; /* Запрет выделения текста */
+}
+
+/* Эффект при наведении */
+#click-button:hover {
+    transform: scale(1.05); /* Увеличение кнопки */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3), 0 8px 25px rgba(0, 0, 0, 0.25); /* Увеличенная тень */
+}
+
+/* Эффект при нажатии */
+#click-button:active {
+    transform: scale(0.95); /* Уменьшение кнопки */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 15px rgba(0, 0, 0, 0.18); /* Уменьшенная тень */
+}

@@ -1,6 +1,5 @@
 console.log("Скрипт загружен");
 let testData;
-let originalAnalyzer, processedAnalyzer;
 
 // Запрашиваем тест
 async function fetchTest() {
@@ -48,8 +47,6 @@ function submitAnswer(event) {
     .catch(error => console.error("Ошибка отправки:", error));
 }
 
-
-
 // Отображение результата
 function showResult(text) {
     console.log("showResult");
@@ -58,67 +55,6 @@ function showResult(text) {
 
     resultText.innerText = text;
     resultContainer.classList.add("visible");
-}
-
-// Плавное расширение контейнера и проявление анализаторов
-function showAnalyzers() {
-    console.log("showAnalyzers");
-
-    // Плавное расширение контейнера для анализаторов
-    document.querySelectorAll(".audio-block").forEach(block => {
-        block.classList.add("visible");
-    });
-
-    // Плавное проявление самих анализаторов
-    document.querySelectorAll(".audio-block canvas").forEach(canvas => {
-        canvas.classList.add("visible");
-    });
-}
-
-// Настройка анализаторов
-function setupAnalyzers() {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-    originalAnalyzer = createAnalyzer(audioContext, "original-audio", "original-analyzer");
-    processedAnalyzer = createAnalyzer(audioContext, "processed-audio", "processed-analyzer");
-}
-
-// Создание визуализации
-function createAnalyzer(audioContext, audioId, canvasId) {
-    const audioElement = document.getElementById(audioId);
-    const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext("2d");
-
-    const source = audioContext.createMediaElementSource(audioElement);
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-
-    source.connect(analyser);
-    analyser.connect(audioContext.destination);
-
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    function draw() {
-        requestAnimationFrame(draw);
-        analyser.getByteFrequencyData(dataArray);
-
-        ctx.fillStyle = "#1E1E1E";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        let x = 0;
-        const barWidth = (canvas.width / bufferLength) * 2;
-
-        for (let i = 0; i < bufferLength; i++) {
-            const barHeight = dataArray[i] * 0.8;
-            ctx.fillStyle = `rgb(${barHeight + 100}, 50, 200)`;
-            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-            x += barWidth + 1;
-        }
-    }
-
-    draw();
-    return analyser;
 }
 
 window.onload = fetchTest;
