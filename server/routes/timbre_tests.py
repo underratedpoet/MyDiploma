@@ -7,25 +7,10 @@ import httpx
 import base64
 
 from utils.fx_processor import one_band_eq, apply_random_effect
+from utils.user_id import get_user_id, FILE_API_URL, DB_API_URL
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
-
-DB_API_URL = getenv("DB_API_URL", "http://db-api:8000")
-FILE_API_URL = getenv("FILE_API_URL", "http://file-api:8000")
-SECRET_KEY = getenv("SECRET_KEY", "your_secret_key")
-ALGORITHM = getenv("ALGORITHM", "HS256")
-
-def get_user_id(request: Request):
-    """Получает ID пользователя из сессии."""
-    token = request.cookies.get("auth")
-    if not token:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload.get("sub")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Unauthorized")
 
 async def generate_eq_test(request: Request, difficulty: str = "medium", filter_type: int = 1):
     """Общие действия для генерации тестов: bandpass-gain и bandstop."""
@@ -70,20 +55,20 @@ async def generate_eq_test(request: Request, difficulty: str = "medium", filter_
 
 async def do_generate_effects_test(request: Request, difficulty: str = "medium"):
     username = get_user_id(request)
-    print("Before random-file")
+
     async with httpx.AsyncClient() as client:
         file_response = await client.get(f"{FILE_API_URL}/random-file/", params={"directory": "testing_tracks"})
         if file_response.status_code != 200:
             raise HTTPException(status_code=500, detail="Failed to retrieve test file")
         original_audio = file_response.content
-    print("Before users")
+
     async with httpx.AsyncClient() as client:
         user_response = await client.get(f"{DB_API_URL}/users/{username}")
         if user_response.status_code != 200:
             raise HTTPException(status_code=404, detail="User not found")
         user_data = user_response.json()
         user_id = user_data["user_id"] 
-    print("Before apply_random_effect")
+
     processed_audio, effect_type = apply_random_effect(audio_bytes=original_audio, difficulty=difficulty) 
 
     original_audio_base64 = base64.b64encode(original_audio).decode('utf-8')

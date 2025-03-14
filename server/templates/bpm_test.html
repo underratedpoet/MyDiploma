@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Тест на определение BPM</h2>
+
+<!-- Панель с результатами -->
+<div id="result-container">
+    <p id="result-text"></p>
+</div>
+
+<div id="test-container">
+    <p>Нажмите "Начать тест", чтобы прослушать ритм метронома. Введите предполагаемый BPM и нажмите "Отправить".</p>
+
+    <button id="start-button">Начать тест</button>
+    <div id="bpm-input-container" style="display: none; margin-top: 20px;">
+        <label for="bpm-input">Введите BPM:</label>
+        <input type="number" id="bpm-input" min="60" max="250" placeholder="60-250" />
+        <button type="submit" id="submit-button">Подтвердить</button>
+    </div>
+</div>
+
+<!-- Подключаем JS -->
+<script src="{{ url_for('static', path='js/bpm_test.js') }}"></script>
+
+{% endblock %}

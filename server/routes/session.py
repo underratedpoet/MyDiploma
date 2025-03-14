@@ -8,15 +8,18 @@ from jose import JWTError, jwt
 from fastapi_login import LoginManager
 import httpx
 import uuid
-import smtplib
-from email.mime.text import MIMEText
+#import smtplib
+#from email.mime.text import MIMEText
 import jwt
+from fastapi import Request, HTTPException
+from uuid import uuid4
+
 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8080")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 180
 
 app = FastAPI()
 

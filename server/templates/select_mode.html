@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h1>Select Test Mode</h1>
+    <form action="/start-test" method="post">
+        <label for="mode">Mode:</label>
+        <select name="mode" id="mode">
+            <option value="exam">Exam</option>
+            <option value="quick_check">Quick Check</option>
+            <option value="timbre">Timbre</option>
+            <option value="harmonic">Harmonic</option>
+            <option value="rhythm">Rhythm</option>
+        </select>
+        <br>
+        <label for="difficulty">Difficulty:</label>
+        <select name="difficulty" id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+        <br>
+        <button type="submit">Start Test</button>
+    </form>
+
+
+{% endblock %}

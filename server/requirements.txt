@@ -6,6 +6,7 @@ pydub
 
 setuptools
 fastapi==0.100.0
+motor
 uvicorn==0.22.0
 python-multipart==0.0.6
 requests

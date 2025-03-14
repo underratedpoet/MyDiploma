@@ -68,22 +68,41 @@ services:
       FILE_API_URL: "http://file-api:8000"
       SECRET_KEY: "supersecretkey"
       FRONTEND_URL: "http://localhost:8080"
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-      FROM_EMAIL: your_email@example.com
+      #SMTP_HOST: mailhog
+      #SMTP_PORT: 1025
+      #FROM_EMAIL: your_email@example.com
+      #REDIS_URL: "redis://redis:6379"
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: test_db
     depends_on:
       db_init:
         condition: service_completed_successfully
     ports:
       - "8080:8000"
 
-  mailhog:
-    image: mailhog/mailhog
-    container_name: mailhog
+  mongo:
+    image: mongo:latest
     ports:
-      - "1025:1025"  # Порт для SMTP
-      - "8025:8025"  # Веб-интерфейс
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+#  mailhog:
+#    image: mailhog/mailhog
+#    container_name: mailhog
+#    ports:
+#      - "1025:1025"  # Порт для SMTP
+#      - "8025:8025"  # Веб-интерфейс
+
+#  redis:
+#    image: redis:latest
+#    container_name: redis
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
 
 volumes:
   postgres_data:
     driver: local
+  mongo_data:

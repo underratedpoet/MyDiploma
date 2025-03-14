@@ -50,7 +50,27 @@ function submitAnswer(event) {
         const button = document.getElementById("submit-button");
         button.innerText = "Далее";
         button.onclick = function() {
-            window.location.href = "/profile"; // Перенаправление на /profile
+            // Используем fetch для перехода на /next-test
+            fetch("/next-test", {
+                method: "GET",
+                credentials: "include"  // Включаем передачу cookies
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Если сервер вернул редирект, переходим по новому URL
+                    window.location.href = response.url;
+                } else {
+                    // Обрабатываем другие ответы (например, JSON)
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.average_score) {
+                    // Если тесты завершены, показываем результаты
+                    window.location.href = "/test-results";
+                }
+            })
+            .catch(error => console.error("Ошибка перехода:", error));
         };
 
         // Скрываем ползунок, метку и отображаемое значение

@@ -1,32 +1,14 @@
-from os import getenv
-import random
 from fastapi import APIRouter, Request, Depends, Form, HTTPException, Response, Body
 from fastapi.templating import Jinja2Templates
-from jose import jwt, JWTError
 import httpx
 import base64
 
 from utils.harmonic_processor import get_notes_wav, get_chords_wav
 from utils.structures import Chord, Note, generate_chord_progression, generate_random_interval
+from utils.user_id import get_user_id, DB_API_URL
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
-
-DB_API_URL = getenv("DB_API_URL", "http://db-api:8000")
-FILE_API_URL = getenv("FILE_API_URL", "http://file-api:8000")
-SECRET_KEY = getenv("SECRET_KEY", "your_secret_key")
-ALGORITHM = getenv("ALGORITHM", "HS256")
-
-def get_user_id(request: Request):
-    """Получает ID пользователя из сессии."""
-    token = request.cookies.get("auth")
-    if not token:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload.get("sub")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     
 async def do_generate_interval_test(request: Request, difficulty: str = "medium"):
     """Общие действия для генерации тестов: bandpass-gain и bandstop."""

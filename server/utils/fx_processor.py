@@ -33,13 +33,10 @@ def one_band_eq(wav_bytes: bytes, filter_width: float, filter_freq: float, gain:
         # Если стерео, делаем reshape для разделения каналов
         if nchannels == 2:
             audio_data = audio_data.reshape(-1, 2)
-    print(audio_data)
-    print(audio_data[0][0].dtype)
     if gain > 0:
         processed_data = bandpass_gain(audio_data, filter_freq, filter_width, gain, framerate)
     else:
         processed_data = bandstop_filter(audio_data, filter_freq, filter_width, framerate)
-    print(processed_data)
     # Преобразуем массив обратно в WAV-байты
     output_io = io.BytesIO()
     with wave.open(output_io, 'wb') as wav_out:
@@ -241,7 +238,7 @@ def apply_distortion(audio_bytes: bytes, gain: float = 10) -> bytes:
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
 
     max_value = np.iinfo(np.int32).max  # Для 32-битного аудио
-    print(min(samples), max(samples))
+
     samples /= max_value
     #
     ## Применяем усиление (гейн)
@@ -408,7 +405,6 @@ def apply_random_effect(audio_bytes: bytes, difficulty: str = "medium") -> tuple
     def apply_no_effect(audio_bytes: bytes) -> bytes:
         return audio_bytes
 
-    print("Before difficulty_params")
     difficulty_params = {
         "easy": {
             "reverb_decay": 0.8, "reverb_delay": 100,
@@ -446,7 +442,6 @@ def apply_random_effect(audio_bytes: bytes, difficulty: str = "medium") -> tuple
     }
     
     params = difficulty_params.get(difficulty, difficulty_params["medium"])
-    print("Before effects_list")
     effects_list = [
         ("Reverb", apply_reverb, [params["reverb_decay"]]), #OK
         ("Delay", apply_delay, [params["delay_ms"], params["delay_decay"]]), #OK

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import bcrypt
 import httpx
 
-from routes.session import *
+from routes.session import create_access_token
 
 DB_API_URL = getenv("DB_API_URL", "http://db-server:8000")
 
