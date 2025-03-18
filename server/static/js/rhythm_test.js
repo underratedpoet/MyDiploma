@@ -118,35 +118,7 @@ function stopTest() {
 
     // Отправка данных на сервер
     sendResults(differences);
-
-    // Показываем кнопку "Далее"
-    document.getElementById("submit-button").style.display = "block";
 }
-
-// Обработчик для кнопки "Далее"
-document.getElementById("submit-button").addEventListener("click", () => {
-        // Используем fetch для перехода на /next-test
-        fetch("/next-test", {
-            method: "GET",
-            credentials: "include"  // Включаем передачу cookies
-        })
-        .then(response => {
-            if (response.redirected) {
-                // Если сервер вернул редирект, переходим по новому URL
-                window.location.href = response.url;
-            } else {
-                // Обрабатываем другие ответы (например, JSON)
-                return response.json();
-            }
-        })
-        .then(data => {
-            if (data && data.average_score) {
-                // Если тесты завершены, показываем результаты
-                window.location.href = "/test-results";
-            }
-        })
-        .catch(error => console.error("Ошибка перехода:", error));
-});
 
 // Расчет разницы между кликами и ударами
 function calculateDifferences() {
@@ -211,6 +183,18 @@ function visualizeDifferences(differences) {
     });
 }
 
+// Отображение результата
+function showResult(text) {
+    const resultContainer = document.getElementById("result-container");
+    const resultText = document.getElementById("result-text");
+
+    resultText.innerText = text;
+    resultContainer.classList.add("visible");
+
+    // Включение кнопки "Начать тест"
+    document.getElementById("start-button").disabled = false;
+}
+
 // Отправка результатов на сервер
 async function sendResults(differences) {
     try {
@@ -229,20 +213,41 @@ async function sendResults(differences) {
 
         // Отображение результата
         showResult(`Ваш результат: ${data.score}. Средняя разница: ${data.average_difference} мс.`);
+
+        // Показываем кнопку "Далее" и добавляем обработчик для перехода на следующий тест
+        const submitButton = document.getElementById("submit-button");
+        submitButton.style.display = "block"; // Делаем кнопку видимой
+        submitButton.disabled = false; // Активируем кнопку
+
+        // Обработчик для кнопки "Далее"
+        submitButton.onclick = function() {
+            // Используем fetch для перехода на /next-test
+            fetch("/next-test", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ "score": data.score }), 
+                credentials: "include"  // Включаем передачу cookies
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Если сервер вернул редирект, переходим по новому URL
+                    window.location.href = response.url;
+                } else {
+                    // Обрабатываем другие ответы (например, JSON)
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.average_score) {
+                    // Если тесты завершены, показываем результаты
+                    window.location.href = "/test-results";
+                }
+            })
+            .catch(error => console.error("Ошибка перехода:", error));
+        };
     } catch (error) {
         console.error("Ошибка отправки:", error);
         showResult("Произошла ошибка при отправке данных. Попробуйте еще раз.");
     }
 }
 
-// Отображение результата
-function showResult(text) {
-    const resultContainer = document.getElementById("result-container");
-    const resultText = document.getElementById("result-text");
-
-    resultText.innerText = text;
-    resultContainer.classList.add("visible");
-
-    // Включение кнопки "Начать тест"
-    document.getElementById("start-button").disabled = false;
-}

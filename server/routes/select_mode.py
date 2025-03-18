@@ -69,6 +69,7 @@ async def start_test(
     # Получаем user_id из кук или генерируем новый
     user_id = get_user_id(req)
     
+    
     # Формируем последовательность тестов
     test_sequence = []
     for test_type, count in MODES[mode].items():
@@ -97,8 +98,8 @@ async def start_test(
     next_test_type = test_sequence[0]
     return RedirectResponse(url=f"/tests/{next_test_type}", status_code=303)
 
-@router.get("/next-test")
-async def next_test(request: Request):
+@router.post("/next-test")
+async def next_test(request: Request, score: int = Form(None)):
     """Переход к следующему тесту."""
     user_id = get_user_id(request)
     print(f"User ID from cookie: {user_id}")  # Добавь эту строку для проверки ID
@@ -108,19 +109,24 @@ async def next_test(request: Request):
     
     if not user_data:
         raise HTTPException(status_code=400, detail="No active test session")
-    
+
+    if score is not None:
+        await users_collection.update_one(
+            {"_id": user_id},
+            {"$push": {"scores": score}}  # Добавляем оценку в массив
+        )
+
     test_sequence = user_data["test_sequence"]
     current_test_index = user_data["current_test_index"]
+    # Увеличиваем индекс и сохраняем в MongoDB
+    new_index = current_test_index + 1
+    await users_collection.update_one({"_id": user_id}, {"$set": {"current_test_index": new_index}})
     
     if current_test_index >= len(test_sequence) - 1:
         # Все тесты пройдены, возвращаем результаты
         scores = user_data["scores"]
         average_score = sum(scores) / len(scores) if scores else 0
-        return {"average_score": average_score}
-    
-    # Увеличиваем индекс и сохраняем в MongoDB
-    new_index = current_test_index + 1
-    await users_collection.update_one({"_id": user_id}, {"$set": {"current_test_index": new_index}})
+        return RedirectResponse(url="/test-results", status_code=303)
     
     # Получаем следующий тест
     next_test_type = test_sequence[new_index]

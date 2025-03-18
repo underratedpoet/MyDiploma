@@ -95,7 +95,9 @@ async function submitAnswer(event) {
         button.onclick = function() {
             // Используем fetch для перехода на /next-test
             fetch("/next-test", {
-                method: "GET",
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ "score": data.score }), 
                 credentials: "include"  // Включаем передачу cookies
             })
             .then(response => {

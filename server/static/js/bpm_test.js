@@ -100,7 +100,7 @@ async function sendResults(userBpm) {
         console.log("Server response:", data);
 
         // Отображение результата
-        showResult(`Вы ввели: ${userBpm}. Реальный BPM: ${bpm}. Оценка: ${data.score}`);
+        showResult(data.score, `Вы ввели: ${userBpm}. Реальный BPM: ${bpm}. Оценка: ${data.score}`);
     } catch (error) {
         console.error("Ошибка отправки:", error);
         showResult("Произошла ошибка при отправке данных. Попробуйте еще раз.");
@@ -108,7 +108,7 @@ async function sendResults(userBpm) {
 }
 
 // Отображение результата
-function showResult(text) {
+function showResult(score, text) {
     const resultContainer = document.getElementById("result-container");
     const resultText = document.getElementById("result-text");
 
@@ -121,7 +121,9 @@ function showResult(text) {
     button.onclick = function() {
         // Используем fetch для перехода на /next-test
         fetch("/next-test", {
-            method: "GET",
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ "score": score }), 
             credentials: "include"  // Включаем передачу cookies
         })
         .then(response => {
