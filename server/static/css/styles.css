@@ -101,23 +101,6 @@ label {
     margin-top: 10px;
 }
 
-input, button {
-    display: block;
-    margin-top: 5px;
-    padding: 8px;
-}
-
-button {
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
 /* === Стили для аудиоплееров === */
 #test-container {
     margin-top: 20px;

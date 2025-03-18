@@ -8,4 +8,45 @@
     <a href="/register">Регистрация</a>
     <a href="/login">Вход</a>
 </div>
+
+<!-- Контейнер для анимации звуковой волны -->
+<div class="sound-wave">
+    {% for i in range(wave_count) %}
+    <div class="wave" style="animation-delay: {{ (i * 0.1) }}s;"></div>
+    {% endfor %}
+</div>
+
+<!-- Стили для анимации -->
+<style>
+    /* Основные стили для контейнера звуковой волны */
+    .sound-wave {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 150px;
+        margin-top: 40px;
+        gap: 4px; /* Расстояние между полосками */
+    }
+
+    /* Стили для каждой волны */
+    .wave {
+        width: 8px;
+        height: 50px;
+        background: linear-gradient(145deg, #BB86FC, #FF79C6); /* Градиентный фон */
+        border-radius: 4px;
+        animation: wave 1.5s infinite ease-in-out;
+    }
+
+    /* Анимация волны */
+    @keyframes wave {
+        0%, 100% {
+            transform: scaleY(1);
+            background: linear-gradient(145deg, #BB86FC, #FF79C6); /* Начальный градиент */
+        }
+        50% {
+            transform: scaleY(2);
+            background: linear-gradient(145deg, #FF79C6, #BB86FC); /* Переливающийся градиент */
+        }
+    }
+</style>
 {% endblock %}

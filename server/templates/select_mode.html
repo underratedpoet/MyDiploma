@@ -1,27 +1,150 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <a href="/profile">Назад</a>
+    <h1>Выберите режим тестирования</h1>
+    <form action="/start-test" method="post" id="testForm">
+        <div class="mode-buttons">
+            <button type="button" class="mode-button" data-mode="exam" onclick="selectMode('exam')">
+                Экзамен
+                <p class="mode-description">По пять тестов каждого вида</p>
+            </button>
+            <button type="button" class="mode-button" data-mode="quick_check" onclick="selectMode('quick_check')">
+                Быстрая проверка
+                <p class="mode-description">По одному тесту каждого вида</p>
+            </button>
+            <button type="button" class="mode-button" data-mode="timbre" onclick="selectMode('timbre')">
+                Тембр
+                <p class="mode-description">По три теста на тембральный слух каждого типа</p>
+            </button>
+            <button type="button" class="mode-button" data-mode="harmonic" onclick="selectMode('harmonic')">
+                Гармония
+                <p class="mode-description">По три теста на гармонический слух каждого типа</p>
+            </button>
+            <button type="button" class="mode-button" data-mode="rhythm" onclick="selectMode('rhythm')">
+                Ритм
+                <p class="mode-description">По три теста на ритм каждого типа</p>
+            </button>
+        </div>
 
-    <h1>Select Test Mode</h1>
-    <form action="/start-test" method="post">
-        <label for="mode">Mode:</label>
-        <select name="mode" id="mode">
-            <option value="exam">Exam</option>
-            <option value="quick_check">Quick Check</option>
-            <option value="timbre">Timbre</option>
-            <option value="harmonic">Harmonic</option>
-            <option value="rhythm">Rhythm</option>
-        </select>
-        <br>
-        <label for="difficulty">Difficulty:</label>
-        <select name="difficulty" id="difficulty">
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-        </select>
-        <br>
-        <button type="submit">Start Test</button>
+        <input type="hidden" name="mode" id="selectedMode">
+        <input type="hidden" name="difficulty" id="selectedDifficulty">
+
+        <div id="difficultyModal" class="modal">
+            <div class="modal-content">
+                <h2>Выберите сложность</h2>
+                <div class="difficulty-buttons">
+                    <button type="button" onclick="selectDifficulty('easy')">Легкая</button>
+                    <button type="button" onclick="selectDifficulty('medium')">Средняя</button>
+                    <button type="button" onclick="selectDifficulty('hard')">Сложная</button>
+                </div>
+            </div>
+        </div>
     </form>
 
+    <script>
+        function selectMode(mode) {
+            document.getElementById('selectedMode').value = mode;
+            document.getElementById('difficultyModal').style.display = 'flex';
+        }
+
+        function selectDifficulty(difficulty) {
+            document.getElementById('selectedDifficulty').value = difficulty;
+            document.getElementById('difficultyModal').style.display = 'none';
+            document.getElementById('testForm').submit(); // Автоматическая отправка формы
+        }
+
+        document.addEventListener('click', function(event) {
+        const modal = document.getElementById('difficultyModal');
+        const modalContent = document.querySelector('.modal-content');
+        // Закрываем окно, если клик был вне области modal-content
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+        });
+    </script>
+
+    <style>
+        .mode-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .mode-button {
+            width: 45%; /* Фиксированная ширина относительно родителя */
+            height: 20vh; /* Относительная высота (20% от высоты экрана) */
+            padding: 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .mode-button:hover {
+            transform: scale(1.05); /* Легкое увеличение при наведении */
+        }
+        .mode-description {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(30, 30, 30, 0.9);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #1E1E1E;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .modal-content h2 {
+            color: white;
+        }
+        .difficulty-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .difficulty-buttons button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+            .mode-button {
+                width: 90%; /* На мобильных устройствах кнопки занимают почти всю ширину */
+                height: 15vh; /* Уменьшаем высоту для мобильных устройств */
+            }
+        }
+    </style>
 
 {% endblock %}

@@ -1,7 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Test Results</h1>
-    <p>Average Score: {{ average_score }}</p>
-    <a href="/select-mode">Back to Mode Selection</a>
+    <h1>Результаты тестирования</h1>
+    <h2 style="color: white;">Средний счёт: <span id="score">0.00</span></h2>
+    <p><a href="/select-mode">Вернуться к выбору режима тестирования</a></p>
+    <p><a href="/profile">Профиль</a></p>
+
+    <script>
+        // Значение average_score из шаблона
+        const targetScore = {{ average_score | default(0) }};
+        const scoreElement = document.getElementById("score");
+
+        // Функция для анимации числа
+        function animateScore(startTime, duration) {
+            const easeOutQuad = (t) => t * (2 - t); // Функция замедления к концу
+
+            function updateScore(currentTime) {
+                const elapsedTime = currentTime - startTime;
+                const progress = Math.min(elapsedTime / duration, 1); // Прогресс от 0 до 1
+                const easedProgress = easeOutQuad(progress); // Применяем замедление
+                const currentScore = (easedProgress * targetScore).toFixed(2); // Текущее значение с двумя знаками после запятой
+
+                scoreElement.textContent = currentScore; // Обновляем текст
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateScore); // Продолжаем анимацию
+                } else {
+                    scoreElement.textContent = targetScore.toFixed(2); // Фиксируем конечное значение
+                }
+            }
+
+            requestAnimationFrame(updateScore);
+        }
+
+        // Запуск анимации при загрузке страницы
+        animateScore(performance.now(), 2000); // Длительность анимации — 2000 мс (2 секунды)
+    </script>
 {% endblock %}
