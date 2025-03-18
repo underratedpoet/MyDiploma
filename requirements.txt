@@ -1,6 +1,0 @@
-beautifulsoup4
-requests
-Django
-google-api-python-client 
-pytube
-yt-dlp
