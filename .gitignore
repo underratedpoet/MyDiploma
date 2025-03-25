@@ -9,3 +9,4 @@ fs/
 .vscode/
 postgres_data/
 server/FluidR3_GM.sf2
+ml-anomaly-detector/

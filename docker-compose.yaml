@@ -87,12 +87,11 @@ services:
     volumes:
       - mongo_data:/data/db
 
-#  mailhog:
-#    image: mailhog/mailhog
-#    container_name: mailhog
-#    ports:
-#      - "1025:1025"  # Порт для SMTP
-#      - "8025:8025"  # Веб-интерфейс
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 #  redis:
 #    image: redis:latest
@@ -102,7 +101,44 @@ services:
 #    volumes:
 #      - redis_data:/data
 
+  #ml-anomaly-collector:
+  #  build:
+  #    context: ./ml-anomaly-detector
+  #    dockerfile: Dockerfile
+  #  volumes:
+  #    - anomaly_data:/app/data  # 📂 сохраняем CSV сюда
+  #    - /var/run/docker.sock:/var/run/docker.sock
+  #  command: ["python", "-u", "auto_collect.py"]
+  #  restart: "no"
+
+  #ml-anomaly-trainer:
+  #  build:
+  #    context: ./ml-anomaly-detector
+  #    dockerfile: Dockerfile
+  #  volumes:
+  #    - anomaly_data:/app/data  # 📂 читаем CSV отсюда
+  #  depends_on:
+  #    ml-anomaly-collector:
+  #      condition: service_completed_successfully
+  #  command: ["python", "-u", "auto_train.py"]
+  #  restart: "no"
+
+  ml-anomaly-detector:
+    build:
+      context: ./ml-anomaly-detector
+      dockerfile: Dockerfile
+    #depends_on:
+    #  ml-anomaly-trainer:
+    #    condition: service_completed_successfully
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - anomaly_data:/app/data  # 🔄 опционально читаем модель
+    ports:
+      - "8090:8000"
+    restart: always
+
 volumes:
   postgres_data:
     driver: local
   mongo_data:
+  anomaly_data:
