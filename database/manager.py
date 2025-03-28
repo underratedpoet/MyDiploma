@@ -19,8 +19,12 @@ class PostgresDBManager:
 
     def _execute(self, query: str, params: tuple = ()):
         """Частный метод для выполнения SQL-запросов."""
-        self.cursor.execute(query, params)
-        self.connection.commit()
+        try:
+            self.cursor.execute(query, params)
+            self.connection.commit()
+        except psycopg2.Error as e:
+            self.connection.rollback()
+            raise e
 
     def fetch_one(self, query: str, params: tuple = ()):
         """Выполняет SQL-запрос и возвращает одну запись."""
@@ -95,8 +99,8 @@ class PostgresDBManager:
         return True  # Пользователь успешно обновлен
 
     def add_test(self, test: Test):
-        query = "INSERT INTO tests (user_id, type_id, score) VALUES (%s, %s, %s);"
-        self._execute(query, (test.user_id, test.type_id, test.score))
+        query = "INSERT INTO tests (user_id, type_id, score, difficulty) VALUES (%s, %s, %s, %s);"
+        self._execute(query, (test.user_id, test.type_id, test.score, test.difficulty))
 
     def delete_user(self, user_id: int):
         query = "DELETE FROM users WHERE user_id = %s;"

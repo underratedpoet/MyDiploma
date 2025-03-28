@@ -27,3 +27,4 @@ class Test(BaseModel):
     user_id: int
     type_id: int
     score: int = Field(..., ge=1, le=100)
+    difficulty: str

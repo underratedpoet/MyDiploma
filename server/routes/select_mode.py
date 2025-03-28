@@ -2,31 +2,11 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Form, Response, 
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import random
-import uuid
-from jose import jwt
-from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel
-from typing import Dict
-
+from utils.mongo import get_user_data, update_user_data, add_score, update_test_index
 from utils.user_id import get_user_id
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
-
-# Модель данных пользователя
-class UserData(BaseModel):
-    test_sequence: list
-    current_test_index: int
-    difficulty: str
-    scores: list
-
-# Подключение к MongoDB
-MONGO_URI = "mongodb://mongo:27017"  # Используйте переменную окружения в реальном приложении
-MONGO_DB = "test_db"
-
-client = AsyncIOMotorClient(MONGO_URI)
-db = client[MONGO_DB]
-users_collection = db["users"]
 
 # Определяем типы тестов и их количество в зависимости от режима
 TEST_TYPES = {
@@ -69,7 +49,6 @@ async def start_test(
     # Получаем user_id из кук или генерируем новый
     user_id = get_user_id(req)
     
-    
     # Формируем последовательность тестов
     test_sequence = []
     for test_type, count in MODES[mode].items():
@@ -87,13 +66,7 @@ async def start_test(
         "scores": [],
     }
 
-    await users_collection.update_one(
-        {"_id": user_id},  # Условие поиска
-        {"$set": user_data},  # Данные для обновления
-        upsert=True  # Если документ не найден, он будет создан
-    )
-    
-    print(f"User {user_id} started test with sequence: {test_sequence}")
+    await update_user_data(user_id, user_data)
     
     next_test_type = test_sequence[0]
     return RedirectResponse(url=f"/tests/{next_test_type}", status_code=303)
@@ -102,25 +75,21 @@ async def start_test(
 async def next_test(request: Request, score: int = Form(None)):
     """Переход к следующему тесту."""
     user_id = get_user_id(request)
-    print(f"User ID from cookie: {user_id}")  # Добавь эту строку для проверки ID
 
-    user_data = await users_collection.find_one({"_id": user_id})
-    print(f"User data: {user_data}")  # Проверь, что данные пользователя есть в базе
+    user_data = await get_user_data(user_id)
     
     if not user_data:
         raise HTTPException(status_code=400, detail="No active test session")
 
     if score is not None:
-        await users_collection.update_one(
-            {"_id": user_id},
-            {"$push": {"scores": score}}  # Добавляем оценку в массив
-        )
+        await add_score(user_id, score)
 
     test_sequence = user_data["test_sequence"]
     current_test_index = user_data["current_test_index"]
+    
     # Увеличиваем индекс и сохраняем в MongoDB
     new_index = current_test_index + 1
-    await users_collection.update_one({"_id": user_id}, {"$set": {"current_test_index": new_index}})
+    await update_test_index(user_id, new_index)
     
     if current_test_index >= len(test_sequence) - 1:
         # Все тесты пройдены, возвращаем результаты
@@ -131,17 +100,13 @@ async def next_test(request: Request, score: int = Form(None)):
     # Получаем следующий тест
     next_test_type = test_sequence[new_index]
     
-    print(f"User {user_id} next test: {next_test_type}, New index: {new_index}")
-    
-    # Перенаправляем на страницу теста, передавая user_id как query-параметр
     return RedirectResponse(url=f"/tests/{next_test_type}", status_code=303)
-
 
 @router.get("/test-results")
 async def test_results(request: Request):
     """Отображает результаты тестирования."""
     user_id = get_user_id(request)
-    user_data = await users_collection.find_one({"_id": user_id})
+    user_data = await get_user_data(user_id)
     
     if not user_data:
         raise HTTPException(status_code=400, detail="No active test session")

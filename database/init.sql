@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS tests (
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     type_id INT REFERENCES test_types(type_id) ON DELETE CASCADE,
     score INT CHECK (score BETWEEN 1 AND 100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    difficulty VARCHAR(20)
 );
 
 CREATE TABLE IF NOT EXISTS confirmation_tokens (

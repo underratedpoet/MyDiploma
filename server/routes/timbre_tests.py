@@ -8,6 +8,7 @@ import base64
 
 from utils.fx_processor import one_band_eq, apply_random_effect
 from utils.user_id import get_user_id, FILE_API_URL, DB_API_URL
+from utils.mongo import get_user_difficulty
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -15,6 +16,7 @@ templates = Jinja2Templates(directory="templates")
 async def generate_eq_test(request: Request, difficulty: str = "medium", filter_type: int = 1):
     """Общие действия для генерации тестов: bandpass-gain и bandstop."""
     username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
     
     async with httpx.AsyncClient() as client:
         file_response = await client.get(f"{FILE_API_URL}/random-file/", params={"directory": "testing_tracks"})
@@ -55,6 +57,7 @@ async def generate_eq_test(request: Request, difficulty: str = "medium", filter_
 
 async def do_generate_effects_test(request: Request, difficulty: str = "medium"):
     username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
 
     async with httpx.AsyncClient() as client:
         file_response = await client.get(f"{FILE_API_URL}/random-file/", params={"directory": "testing_tracks"})
@@ -133,6 +136,8 @@ async def submit_effects_test(request: Request, selected_effect: str = Form(...)
 
 async def do_submit_effects_test(request: Request, selected_effect: str):
     """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
+    username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
     test_data = request.session.get("test_data")
     if not test_data:
         raise HTTPException(status_code=400, detail="No active test session")
@@ -144,13 +149,16 @@ async def do_submit_effects_test(request: Request, selected_effect: str):
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": test_data["user_id"],
             "type_id": 3,  # В зависимости от типа фильтра
-            "score": int(score)
+            "score": int(score),
+            "difficulty": difficulty
         })    
 
     return {"score": int(score), "real_effect": real_effect, "selected_effect": selected_effect}    
 
 async def do_submit_eq_test(request: Request, selected_freq: float, filter_type: int):
     """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
+    username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)    
     test_data = request.session.get("test_data")
     if not test_data:
         raise HTTPException(status_code=400, detail="No active test session")
@@ -164,7 +172,8 @@ async def do_submit_eq_test(request: Request, selected_freq: float, filter_type:
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": test_data["user_id"],
             "type_id": filter_type,  # В зависимости от типа фильтра
-            "score": int(score)
+            "score": int(score),
+            "difficulty": difficulty
         })
     
     return {"score": int(score), "real_freq": real_freq, "selected_freq": selected_freq}

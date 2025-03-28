@@ -6,6 +6,7 @@ import base64
 from utils.harmonic_processor import get_notes_wav, get_chords_wav
 from utils.structures import Chord, Note, generate_chord_progression, generate_random_interval
 from utils.user_id import get_user_id, DB_API_URL
+from utils.mongo import get_user_difficulty
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -40,6 +41,7 @@ async def do_generate_interval_test(request: Request, difficulty: str = "medium"
 async def do_generate_chords_test(request: Request, difficulty: str = "medium"):
     """Общие действия для генерации тестов: bandpass-gain и bandstop."""
     username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
 
     async with httpx.AsyncClient() as client:
         user_response = await client.get(f"{DB_API_URL}/users/{username}")
@@ -100,6 +102,8 @@ async def submit_chords_test(request: Request, data: dict = Body(...)):
 
 async def do_submit_interval_test(request: Request, selected_interval: int):
     """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
+    username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
     test_data = request.session.get("test_data")
     if not test_data:
         raise HTTPException(status_code=400, detail="No active test session")
@@ -107,20 +111,26 @@ async def do_submit_interval_test(request: Request, selected_interval: int):
     real_interval = test_data["interval"]
     
 
-    score = 100 if real_interval == selected_interval else 1
-    print(real_interval, selected_interval, score)
+    score = max(1, 100 - (abs(real_interval - selected_interval) / 24) * 100)
+    if difficulty == "hard":
+        score *= 1.2
+    elif difficulty == "easy":
+        score *= 0.8
     
     async with httpx.AsyncClient() as client:
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": test_data["user_id"],
             "type_id": 4,  # В зависимости от типа фильтра
-            "score": int(score)
+            "score": int(score),
+            "difficulty": difficulty
         })
     
     return {"score": int(score), "real_interval": real_interval, "selected_interval": selected_interval}
 
 async def do_submit_chords_test(request: Request, selected_steps: list[int]):
     """Обрабатывает результат теста и сохраняет его (для обоих типов фильтров)."""
+    username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
     test_data = request.session.get("test_data")
     if not test_data:
         raise HTTPException(status_code=400, detail="No active test session")
@@ -152,7 +162,8 @@ async def do_submit_chords_test(request: Request, selected_steps: list[int]):
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": test_data["user_id"],
             "type_id": 5,  # В зависимости от типа фильтра
-            "score": int(score)
+            "score": int(score),
+            "difficulty": difficulty
         })
     
     # Возвращаем результат

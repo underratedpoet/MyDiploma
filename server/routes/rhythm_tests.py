@@ -5,6 +5,7 @@ import base64
 import numpy as np
 
 from utils.user_id import get_user_id, DB_API_URL
+from utils.mongo import get_user_difficulty
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -17,7 +18,8 @@ async def get_bandpass_test_page(request: Request):
 @router.post("/submit-test/rhythm")
 async def submit_rhythm_test(request: Request, data: dict = Body(...)):
     """Обрабатывает результат теста на ритм."""
-    username = get_user_id(request)
+    username = get_user_id(request)   
+    difficulty = await get_user_difficulty(username)
     differences = data.get("differences")
     bpm = data.get("bpm")
 
@@ -30,6 +32,10 @@ async def submit_rhythm_test(request: Request, data: dict = Body(...)):
     # Расчет оценки (чем меньше разница, тем выше балл)
     max_difference = 500  # Максимальная допустимая разница (мс)
     score = max(1, 100 - (average_difference / max_difference) * 100)
+    if difficulty == "hard":
+        score *= 1.2
+    elif difficulty == "easy":
+        score *= 0.8
 
     async with httpx.AsyncClient() as client:
         user_response = await client.get(f"{DB_API_URL}/users/{username}")
@@ -42,7 +48,8 @@ async def submit_rhythm_test(request: Request, data: dict = Body(...)):
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": user_id,
             "type_id": 6,
-            "score": int(score)
+            "score": int(score),
+            "difficulty": difficulty
         })  
 
     return {
@@ -60,6 +67,7 @@ async def get_bandpass_test_page(request: Request):
 async def submit_bpm_test(request: Request, data: dict = Body(...)):
     """Обрабатывает результат теста на угадывание BPM."""
     username = get_user_id(request)
+    difficulty = await get_user_difficulty(username)
     user_bpm = data.get("user_bpm")
     real_bpm = data.get("real_bpm")
 
@@ -72,6 +80,10 @@ async def submit_bpm_test(request: Request, data: dict = Body(...)):
     # Расчет оценки (чем меньше разница, тем выше балл)
     max_difference = 50  # Максимальная допустимая разница
     score = max(0, 100 - (difference / max_difference) * 100)
+    if difficulty == "hard":
+        score *= 1.2
+    elif difficulty == "easy":
+        score *= 0.8
 
     async with httpx.AsyncClient() as client:
         user_response = await client.get(f"{DB_API_URL}/users/{username}")
@@ -84,7 +96,8 @@ async def submit_bpm_test(request: Request, data: dict = Body(...)):
         await client.post(f"{DB_API_URL}/tests/", json={
             "user_id": user_id,
             "type_id": 7,
-            "score": int(score)
+            "score": int(score),
+            "difficulty": difficulty
         })  
 
     return {
