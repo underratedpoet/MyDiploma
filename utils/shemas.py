@@ -17,9 +17,11 @@ class User(BaseModel):
     role: str = "user"
 
 class TestCategory(BaseModel):
+    category_id: int
     category_name: str
 
 class TestType(BaseModel):
+    type_id: int
     type_name: str
     category_id: int
 

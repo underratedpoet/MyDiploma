@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="stats-container">
+        <a href="/profile">Назад</a>
+        <h1>Статистика испытаний</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="timeRange">Период:</label>
+                <select id="timeRange">
+                    <option value="day">День</option>
+                    <option value="week" selected>Неделя</option>
+                    <option value="month">Месяц</option>
+                    <option value="year">Год</option>
+                    <option value="all">Все время</option>
+                </select>
+                
+                <label for="category">Категория:</label>
+                <select id="category">
+                    <option value="all">Все категории</option>
+                    {% for category in categories %}
+                    <option value="{{ category.category_id }}">{{ category.category_name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <label for="type">Тип теста:</label>
+                <select id="type">
+                    <option value="all">Все типы</option>
+                    {% for type in types %}
+                    <option value="{{ type.type_id }}" data-category="{{ type.category_id }}">{{ type.type_name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <label for="difficulty">Сложность:</label>
+                <select id="difficulty">
+                    <option value="all">Все</option>
+                    <option value="easy">Легкая</option>
+                    <option value="medium">Средняя</option>
+                    <option value="hard">Сложная</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button id="updateChart">Обновить график</button>
+                <button id="resetZoom">Сбросить масштаб</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="statsChart"></canvas>
+        </div>
+        
+        <div id="noDataMessage" class="no-data" style="display: none;">
+            Нет данных для отображения по выбранным параметрам
+        </div>
+    </div>
+
+    <script>
+        // Передаем данные из шаблона
+        window.appData = {
+            typesMap: {
+                {% for type in types %}
+                {{ type.type_id }}: "{{ type.type_name }}",
+                {% endfor %}
+            }
+        };
+    </script>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
+    <script src="{{ url_for('static', path='js/stats.js') }}"></script>
+{% endblock %}
+
+{% block styles %}
+    <style>    
+        .container {
+            max-width: 90%;
+        }
+    </style>
+{% endblock %}

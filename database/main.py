@@ -1,10 +1,11 @@
 import os
+from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Query
 from typing import List
 from manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
 
-from utils.shemas import User, Test, UserUpdate
+from utils.shemas import User, Test, UserUpdate, TestCategory, TestType
 
 app = FastAPI()
 
@@ -33,6 +34,20 @@ def register_user(user: User):
 def add_test(test: Test):
     db.add_test(test)
     return {"message": "Test added successfully"}
+
+@app.get("/user_tests/")
+def get_user_tests(
+    username: str = Query(..., description="Имя пользователя"),
+    time_after: str = Query(..., description="Временная метка в формате ISO (например, 2023-01-01T00:00:00)")
+):
+    try:
+        time_after_dt = datetime.fromisoformat(time_after)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid datetime format")
+    
+    tests = db.get_tests_by_user(username=username, time_after=time_after_dt)
+    print(tests)
+    return {"tests": tests or []}  # Возвращаем пустой список вместо None
 
 
 @app.delete("/users/{user_id}")
@@ -96,12 +111,12 @@ def get_password_hash(username: str):
 
     return {"password_hash": result["password_hash"]}
 
-@app.get("/test_categories/", response_model=List[Test])
+@app.get("/test_categories/", response_model=List[TestCategory])
 def get_all_test_categories():
     return db.get_all_test_categories()
 
 
-@app.get("/test_types/", response_model=List[Test])
+@app.get("/test_types/", response_model=List[TestType])
 def get_all_test_types():
     return db.get_all_test_types()
 

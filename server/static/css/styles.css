@@ -344,3 +344,113 @@ select option:checked {
     transform: scale(0.95); /* Уменьшение кнопки */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 4px 15px rgba(0, 0, 0, 0.18); /* Уменьшенная тень */
 }
+
+/* === Стили для страницы статистики === */
+.stats-container {
+    width: 90%;
+    margin: 1.875rem auto; /* 30px */
+    padding: 1.5625rem; /* 25px */
+    background: #4c4c4c;
+    border-radius: 0.625rem; /* 10px */
+    box-shadow: 0 0 0.9375rem rgba(255, 255, 255, 0.1); /* 15px */
+}
+.controls {
+    margin-bottom: 1.5625rem; /* 25px */
+    padding: 1.25rem; /* 20px */
+    background: #252525;
+    border-radius: 0.5rem; /* 8px */
+    box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.2); /* 2px 5px */
+}
+.control-group {
+    margin-bottom: 0.9375rem; /* 15px */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9375rem; /* 15px */
+}
+.control-group label {
+    color: #E0E0E0;
+    font-weight: bold;
+    font-size: 1em;
+    margin-right: 0.625rem; /* 10px */
+    flex: 0 0 auto;
+}
+.control-group select {
+    flex: 1 1 auto;
+    min-width: 10rem; /* 160px */
+    padding: 0.625em; /* 10px/16px */
+    background: #333;
+    color: #E0E0E0;
+    border: 0.125rem solid #BB86FC; /* 2px */
+    border-radius: 0.3125rem; /* 5px */
+    font-size: 1em;
+}
+.control-group button {
+    padding: 0.625em 1.25em; /* 10px 20px */
+    background: #BB86FC;
+    color: #121212;
+    border: none;
+    border-radius: 0.3125rem; /* 5px */
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.control-group button:hover {
+    background: #FF79C6;
+    transform: translateY(-0.0625rem); /* -1px */
+}
+.chart-container {
+    position: relative;
+    /*height: 50vh; /* 50% высоты viewport */
+    min-height: 25rem; /* 400px */
+    width: 100%;
+    margin-top: 1.25rem; /* 20px */
+}
+.no-data {
+    text-align: center;
+    padding: 3.125rem; /* 50px */
+    font-size: 1.125rem; /* 18px */
+    color: #666;
+    background: #252525;
+    border-radius: 0.5rem; /* 8px */
+    margin-top: 1.25rem; /* 20px */
+}
+/* Адаптация для мобильных устройств */
+@media (max-width: 48em) { /* 768px */
+    .stats-container {
+        width: 95%;
+        padding: 1rem; /* 16px */
+    }
+    
+    .controls {
+        padding: 1rem; /* 16px */
+    }
+    
+    .control-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.625rem; /* 10px */
+    }
+    
+    .control-group select {
+        width: 100%;
+    }
+    
+    .chart-container {
+        height: 70vh;
+        min-height: 20rem; /* 320px */
+    }
+}
+/* Мелкие экраны */
+@media (max-width: 30em) { /* 480px */
+    .stats-container {
+        margin: 1rem auto; /* 16px */
+    }
+    
+    .no-data {
+        padding: 1.5rem; /* 24px */
+        font-size: 1rem; /* 16px */
+    }
+}

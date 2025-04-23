@@ -39,7 +39,7 @@ app.add_middleware(SessionMiddleware, secret_key=getenv("SECRET_KEY", "super"))
 app.add_middleware(RedirectOnAuthErrorMiddleware)
 
 # Подключаем маршруты
-from routes import home, auth, profile, timbre_tests, harmonic_tests, rhythm_tests, select_mode, references
+from routes import home, auth, profile, timbre_tests, harmonic_tests, rhythm_tests, select_mode, references, stats
 app.include_router(home.router)
 app.include_router(auth.router)
 app.include_router(profile.router)
@@ -48,6 +48,7 @@ app.include_router(harmonic_tests.router)
 app.include_router(rhythm_tests.router)
 app.include_router(select_mode.router)
 app.include_router(references.router)
+app.include_router(stats.router)
 
 # Подключаем статику (CSS, JS)
 app.mount('/static', StaticFiles(directory='static'), 'static')

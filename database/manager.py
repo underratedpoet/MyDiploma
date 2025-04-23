@@ -68,6 +68,13 @@ class PostgresDBManager:
         user = self.cursor.fetchone()
         return user if user else None
     
+    def get_tests_by_user(self, username: str, time_after: datetime):
+        """Получает данные о тестах, пройденных пользователем, по его `username` и за указанное время"""
+        query = "SELECT type_id, score, t.created_at, difficulty FROM tests t, users u WHERE u.user_id = t.user_id AND u.username = %s AND t.created_at > %s;"
+        self.cursor.execute(query, (username, time_after))
+        tests = self.cursor.fetchall()
+        return tests if tests else None        
+    
     def update_user(self, username: str, user: User) -> bool:
         """Обновляет данные пользователя, кроме пароля."""
         fields = []
