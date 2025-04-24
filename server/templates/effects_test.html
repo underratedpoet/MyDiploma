@@ -20,7 +20,7 @@
     </div>
 </div>
 
-<form onsubmit="submitAnswer(event)">
+<form id="submit-form" onsubmit="submitAnswer(event)">
     <label for="effect">Выберите эффект:</label>
     <select name="effect" id="effect-select">
         <option value="No effect">No effect</option>
@@ -35,6 +35,12 @@
         <option value="Saturation">Saturation</option>
       </select>
     <button type="submit" id="submit-button">Подтвердить</button>
+</form>
+
+<form id="next-form" onsubmit="goToNextTest(event)" style="display: none; margin-top: 1rem;">
+    <button type="submit">
+        Далее
+    </button>
 </form>
 
 <!-- Подключаем JS -->

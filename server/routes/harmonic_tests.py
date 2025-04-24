@@ -7,6 +7,7 @@ from utils.harmonic_processor import get_notes_wav, get_chords_wav
 from utils.structures import Chord, Note, generate_chord_progression, generate_random_interval
 from utils.user_id import get_user_id, DB_API_URL
 from utils.mongo import get_user_difficulty
+from routes.session import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -67,32 +68,32 @@ async def do_generate_chords_test(request: Request, difficulty: str = "medium"):
     }
 
 @router.get("/tests/interval")
-async def get_interval_test_page(request: Request):
+async def get_interval_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для bandpass."""
     return templates.TemplateResponse("intervals_test.html", {"request": request})
 
 @router.get("/tests/chords")
-async def get_chords_test_page(request: Request):
+async def get_chords_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для bandpass."""
     return templates.TemplateResponse("chords_test.html", {"request": request})
 
 @router.get("/generate-test/interval")
-async def generate_interval_test(request: Request, difficulty: str = "medium"):
+async def generate_interval_test(request: Request, difficulty: str = "medium", username: str = Depends(get_current_user)):
     """Генерирует испытание для bandpass-gain."""
     return await do_generate_interval_test(request, difficulty)
 
 @router.get("/generate-test/chords")
-async def generate_chords_test(request: Request, difficulty: str = "medium"):
+async def generate_chords_test(request: Request, difficulty: str = "medium", username: str = Depends(get_current_user)):
     """Генерирует испытание для bandpass-gain."""
     return await do_generate_chords_test(request, difficulty)
 
 @router.post("/submit-test/interval")
-async def submit_interval_test(request: Request, selected_interval: int = Form(...)):
+async def submit_interval_test(request: Request, selected_interval: int = Form(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста bandstop и сохраняет его."""
     return await do_submit_interval_test(request, selected_interval)
 
 @router.post("/submit-test/chords")
-async def submit_chords_test(request: Request, data: dict = Body(...)):
+async def submit_chords_test(request: Request, data: dict = Body(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста bandstop и сохраняет его."""
     selected_steps = data.get("selected_steps")
     if not selected_steps:

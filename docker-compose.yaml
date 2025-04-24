@@ -15,6 +15,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: sound_db
+      ADMINER_DESIGN: 'pepa-linha' 
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     healthcheck:

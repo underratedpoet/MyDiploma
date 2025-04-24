@@ -22,8 +22,10 @@ function base64ToBlob(base64) {
 
 // Отправка результата
 function submitAnswer(event) {
-    console.log("submitAnswer");
     event.preventDefault();
+    console.log("submitAnswer");
+    if (submitAnswer.submitted) return;
+    submitAnswer.submitted = true;
     
     const selectedEffect = document.getElementById("effect-select").value;
     
@@ -35,41 +37,48 @@ function submitAnswer(event) {
     .then(response => response.json())
     .then(data => {
         showResult(`Вы выбрали ${data.selected_effect}. Истинное значение: ${data.real_effect}. Оценка: ${data.score}`);
-
-        // Меняем текст кнопки на "Далее" и перенаправляем
-        const button = document.getElementById("submit-button");
-        button.innerText = "Далее";
-        button.onclick = function() {
-            // Используем fetch для перехода на /next-test
-            fetch("/next-test", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ "score": data.score }), 
-                credentials: "include"  // Включаем передачу cookies
-            })
-            .then(response => {
-                if (response.redirected) {
-                    // Если сервер вернул редирект, переходим по новому URL
-                    window.location.href = response.url;
-                } else {
-                    // Обрабатываем другие ответы (например, JSON)
-                    return response.json();
-                }
-            })
-            .then(data => {
-                if (data && data.average_score) {
-                    // Если тесты завершены, показываем результаты
-                    window.location.href = "/test-results";
-                }
-            })
-            .catch(error => console.error("Ошибка перехода:", error));
-        };
-
-        // Скрываем ползунок, метку и отображаемое значение
-        document.getElementById("effect-select").style.display = "none";
-        document.querySelector("label[for='effect']").style.display = "none"; // Скрываем label
+        showAnalyzers();
+        setupAnalyzers();
     })
-    .catch(error => console.error("Ошибка отправки:", error));
+    .catch(error => {
+        console.error("Ошибка отправки:", error);
+    });
+    // Скрыть submit-форму, показать next-форму
+    document.getElementById("submit-form").style.display = "none";
+    document.getElementById("next-form").style.display = "block";
+    // Скрыть элементы управления
+    document.getElementById("frequency").style.display = "none";
+    document.getElementById("frequency-value").style.display = "none";
+    document.querySelector("label[for='frequency']").style.display = "none";
+    document.querySelector("span[for='frequency']").style.display = "none";
+}
+
+function goToNextTest(event) {
+    event.preventDefault();
+    console.log("goToNextTest");
+
+    fetch("/next-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ "score": testData?.score || 0 }),
+        credentials: "include"
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.json();
+        }
+    })
+    .then(data => {
+        if (data && data.average_score) {
+            window.location.href = "/test-results";
+        }
+    })
+    .catch(error => {
+        console.error("Ошибка перехода:", error);
+        window.location.href = "/login";
+    });
 }
 
 

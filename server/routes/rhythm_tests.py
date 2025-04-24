@@ -6,17 +6,18 @@ import numpy as np
 
 from utils.user_id import get_user_id, DB_API_URL
 from utils.mongo import get_user_difficulty
+from routes.session import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
     
 @router.get("/tests/rhythm")
-async def get_bandpass_test_page(request: Request):
+async def get_bandpass_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для bandpass."""
     return templates.TemplateResponse("rhythm_test.html", {"request": request})
 
 @router.post("/submit-test/rhythm")
-async def submit_rhythm_test(request: Request, data: dict = Body(...)):
+async def submit_rhythm_test(request: Request, data: dict = Body(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста на ритм."""
     username = get_user_id(request)   
     difficulty = await get_user_difficulty(username)
@@ -59,12 +60,12 @@ async def submit_rhythm_test(request: Request, data: dict = Body(...)):
     }
 
 @router.get("/tests/bpm")
-async def get_bandpass_test_page(request: Request):
+async def get_bandpass_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для bandpass."""
     return templates.TemplateResponse("bpm_test.html", {"request": request})
 
 @router.post("/submit-test/bpm")
-async def submit_bpm_test(request: Request, data: dict = Body(...)):
+async def submit_bpm_test(request: Request, data: dict = Body(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста на угадывание BPM."""
     username = get_user_id(request)
     difficulty = await get_user_difficulty(username)

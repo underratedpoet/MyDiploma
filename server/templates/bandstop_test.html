@@ -22,11 +22,17 @@
     </div>
 </div>
 
-<form onsubmit="submitAnswer(event)">
+<form id="submit-form" onsubmit="submitAnswer(event)">
     <label for="frequency">Выберите центральную частоту (Гц):</label>
     <input type="range" id="frequency" name="selected_freq" min="300" max="15000" value="300" step="1" required>
     <span id="frequency-value">300</span>
     <button type="submit" id="submit-button">Подтвердить</button>
+</form>
+
+<form id="next-form" onsubmit="goToNextTest(event)" style="display: none; margin-top: 1rem;">
+    <button type="submit">
+        Далее
+    </button>
 </form>
 
 <!-- Подключаем JS -->

@@ -61,6 +61,8 @@ function createSelectElements(steps) {
 
 // Отправка результата
 async function submitAnswer(event) {
+    //if (submitAnswer.submitted) return;
+    //submitAnswer.submitted = true;
     console.log("submitAnswer");
     event.preventDefault();
 
@@ -114,6 +116,13 @@ async function submitAnswer(event) {
                     // Если тесты завершены, показываем результаты
                     window.location.href = "/test-results";
                 }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 500) {
+                    window.location.href = "/login";
+                    return;
+                }
+                return response.json();
             })
             .catch(error => console.error("Ошибка перехода:", error));
         };

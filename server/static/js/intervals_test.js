@@ -19,6 +19,8 @@ function base64ToBlob(base64) {
 
 // Отправка результата
 function submitAnswer(event) {
+    //if (submitAnswer.submitted) return;
+    //submitAnswer.submitted = true;  
     console.log("submitAnswer");
     event.preventDefault();
     
@@ -35,8 +37,10 @@ function submitAnswer(event) {
 
         // Меняем текст кнопки на "Далее" и перенаправляем
         const button = document.getElementById("submit-button");
+        button.onsubmit = null; // Убираем обработчик события submit
         button.innerText = "Далее";
         button.onclick = function() {
+            console.log("Далее");
             // Используем fetch для перехода на /next-test
             fetch("/next-test", {
                 method: "POST",
@@ -58,6 +62,13 @@ function submitAnswer(event) {
                     // Если тесты завершены, показываем результаты
                     window.location.href = "/test-results";
                 }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 500) {
+                    window.location.href = "/login";
+                    return;
+                }
+                return response.json();
             })
             .catch(error => console.error("Ошибка перехода:", error));
         };

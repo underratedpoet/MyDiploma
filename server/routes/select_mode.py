@@ -77,6 +77,7 @@ async def next_test(request: Request, score: int = Form(None)):
     user_id = get_user_id(request)
 
     user_data = await get_user_data(user_id)
+    print(user_data)
     
     if not user_data:
         raise HTTPException(status_code=400, detail="No active test session")
@@ -99,6 +100,7 @@ async def next_test(request: Request, score: int = Form(None)):
     
     # Получаем следующий тест
     next_test_type = test_sequence[new_index]
+    print(f"Next test type: {next_test_type}")
     
     return RedirectResponse(url=f"/tests/{next_test_type}", status_code=303)
 

@@ -9,6 +9,7 @@ import base64
 from utils.fx_processor import one_band_eq, apply_random_effect
 from utils.user_id import get_user_id, FILE_API_URL, DB_API_URL
 from utils.mongo import get_user_difficulty
+from routes.session import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -90,47 +91,47 @@ async def do_generate_effects_test(request: Request, difficulty: str = "medium")
 
 
 @router.get("/tests/bandpass-gain")
-async def get_bandpass_test_page(request: Request):
+async def get_bandpass_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для bandpass."""
     return templates.TemplateResponse("bandpass_gain_test.html", {"request": request})
 
 @router.get("/generate-test/bandpass-gain")
-async def generate_bandpass_test(request: Request, difficulty: str = "medium"):
+async def generate_bandpass_test(request: Request, difficulty: str = "medium", username: str = Depends(get_current_user)):
     """Генерирует испытание для bandpass-gain."""
     return await generate_eq_test(request, difficulty, filter_type=1)
 
 @router.get("/tests/effects")
-async def get_effects_test_page(request: Request):
+async def get_effects_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для effects."""
     return templates.TemplateResponse("effects_test.html", {"request": request})
 
 @router.get("/generate-test/effects")
-async def generate_effects_test(request: Request, difficulty: str = "medium"):
+async def generate_effects_test(request: Request, difficulty: str = "medium", username: str = Depends(get_current_user)):
     """Генерирует испытание для effects."""
     return await do_generate_effects_test(request, difficulty)
 
 @router.get("/tests/bandstop")
-async def get_bandstop_test_page(request: Request):
+async def get_bandstop_test_page(request: Request, username: str = Depends(get_current_user)):
     """Отображает страницу теста для bandstop."""
     return templates.TemplateResponse("bandstop_test.html", {"request": request})
 
 @router.get("/generate-test/bandstop")
-async def generate_bandstop_test(request: Request, difficulty: str = "medium"):
+async def generate_bandstop_test(request: Request, difficulty: str = "medium", username: str = Depends(get_current_user)):
     """Генерирует испытание для bandstop."""
     return await generate_eq_test(request, difficulty, filter_type=2)
 
 @router.post("/submit-test/bandpass-gain")
-async def submit_bandpass_test(request: Request, selected_freq: float = Form(...)):
+async def submit_bandpass_test(request: Request, selected_freq: float = Form(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста bandpass-gain и сохраняет его."""
     return await do_submit_eq_test(request, selected_freq, filter_type=1)
 
 @router.post("/submit-test/bandstop")
-async def submit_bandstop_test(request: Request, selected_freq: float = Form(...)):
+async def submit_bandstop_test(request: Request, selected_freq: float = Form(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста bandstop и сохраняет его."""
     return await do_submit_eq_test(request, selected_freq, filter_type=2)
 
 @router.post("/submit-test/effects")
-async def submit_effects_test(request: Request, selected_effect: str = Form(...)):
+async def submit_effects_test(request: Request, selected_effect: str = Form(...), username: str = Depends(get_current_user)):
     """Обрабатывает результат теста bandstop и сохраняет его."""
     return await do_submit_effects_test(request, selected_effect)
 
