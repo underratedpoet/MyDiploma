@@ -14,26 +14,33 @@ Path(STORAGE_DIR).mkdir(parents=True, exist_ok=True)
 Path(TESTING_TRACKS_DIR).mkdir(parents=True, exist_ok=True)
 
 
+
 @app.post("/upload/")
 async def upload_file(directory: str, file: UploadFile):
     """
     Загружает файл в указанную директорию.
-    Если файл с таким именем существует, добавляется порядковый номер.
+    В папке avatars файл перезаписывается,
+    в других папках создается уникальное имя при необходимости.
     """
     dir_path = Path(STORAGE_DIR) / directory
-    dir_path.mkdir(parents=True, exist_ok=True)  # Создаем директорию, если ее нет
+    dir_path.mkdir(parents=True, exist_ok=True)  # Создание директории, если отсутствует
 
     file_path = dir_path / file.filename
     base_name, ext = os.path.splitext(file.filename)
     counter = 1
 
-    # Генерируем уникальное имя файла, если он уже существует
-    while file_path.exists():
-        file_path = dir_path / f"{base_name}_{counter}{ext}"
-        counter += 1
+    if directory == "avatars":
+        # В avatars всегда перезаписываем
+        pass
+    else:
+        # Генерация уникального имени файла
+        while file_path.exists():
+            file_path = dir_path / f"{base_name}_{counter}{ext}"
+            counter += 1
 
+    # Сохраняем файл
+    content = await file.read()
     with file_path.open("wb") as f:
-        content = await file.read()
         f.write(content)
 
     return {"message": "File uploaded successfully", "path": str(file_path)}

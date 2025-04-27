@@ -3,11 +3,19 @@ from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Body, Query
 from typing import List
-from manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
+import psycopg2
+import sys
 
+from manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
 from utils.shemas import User, Test, UserUpdate, TestCategory, TestType
 
 app = FastAPI()
+
+def fatal_db_error(e: Exception):
+    """Фатальная ошибка работы с БД — аварийное завершение приложения."""
+    if isinstance(e, psycopg2.InterfaceError) or isinstance(e, psycopg2.OperationalError):
+        print(f"Fatal database error detected: {str(e)}", file=sys.stderr)
+        os._exit(1)
 
 db = PostgresDBManager(
     db_name=os.getenv("POSTGRES_DB", "test_db"),
@@ -20,19 +28,31 @@ db = PostgresDBManager(
 
 @app.post("/users/")
 def add_user(user: User):
-    db.add_user(user)
+    """Добавляет нового пользователя в БД."""
+    try:
+        db.add_user(user)
+    except Exception as e:
+        fatal_db_error(e)
     return {"message": "User added successfully"}
 
 @app.post("/users/register")
 def register_user(user: User):
-    success = db.add_user(user)
+    """Регистрация нового пользователя. Проверяет, существует ли пользователь с таким именем или email."""
+    try:
+        success = db.add_user(user)
+    except Exception as e:
+        fatal_db_error(e)
     if success:
         return {"message": "User registered successfully"}
     raise HTTPException(status_code=400, detail="User already exists")
 
 @app.post("/tests/")
 def add_test(test: Test):
-    db.add_test(test)
+    """Добавляет новый тест в БД."""
+    try:
+        db.add_test(test)
+    except Exception as e:
+        fatal_db_error(e)
     return {"message": "Test added successfully"}
 
 @app.get("/user_tests/")
@@ -44,21 +64,31 @@ def get_user_tests(
         time_after_dt = datetime.fromisoformat(time_after)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid datetime format")
-    
-    tests = db.get_tests_by_user(username=username, time_after=time_after_dt)
+
+    try: 
+        tests = db.get_tests_by_user(username=username, time_after=time_after_dt)
+    except Exception as e:
+        fatal_db_error(e)
     print(tests)
     return {"tests": tests or []}  # Возвращаем пустой список вместо None
 
 
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int):
-    db.delete_user(user_id)
+    """Удаляет пользователя по `user_id`."""
+    try:
+        db.delete_user(user_id)
+    except Exception as e:
+        fatal_db_error(e)
     return {"message": "User deleted successfully"}
 
 @app.put("/users/{username}")
 def update_user(username: str, user: UserUpdate = Body(...)):
     """Обновляет данные пользователя (без изменения пароля)."""
-    success = db.update_user(username, user)
+    try:
+        success = db.update_user(username, user)
+    except Exception as e:
+        fatal_db_error(e)
     
     if success:
         return {"message": "User updated successfully"}
@@ -71,10 +101,13 @@ async def confirm_update(token: str):
     # Инициализация менеджера базы данных
     
     # Попытка обновить данные пользователя с помощью токена
-    if db.update_user_with_token_data(token):
-        return {"message": "Profile updated successfully"}
-    else:
-        raise HTTPException(status_code=400, detail="Invalid or expired confirmation token")
+    try:
+        if db.update_user_with_token_data(token):
+            return {"message": "Profile updated successfully"}
+        else:
+            raise HTTPException(status_code=400, detail="Invalid or expired confirmation token")
+    except Exception as e:
+        fatal_db_error(e)
 
 @app.post("/users/authenticate")
 def authenticate_user(data: dict):
@@ -83,7 +116,10 @@ def authenticate_user(data: dict):
     password_hash = data.get("password_hash")
     
     query = "SELECT * FROM users WHERE username = %s AND password_hash = %s"
-    user = db.fetch_one(query, (username, password_hash))
+    try:
+        user = db.fetch_one(query, (username, password_hash))
+    except Exception as e:
+        fatal_db_error(e)
 
     if user:
         return {"username": user["username"], "email": user["email"], "role": user["role"]}
@@ -93,7 +129,10 @@ def authenticate_user(data: dict):
 @app.get("/users/{username}")
 def get_user(username: str):
     """Возвращает данные пользователя по `username`"""
-    user = db.get_user_by_username(username)
+    try:
+        user = db.get_user_by_username(username)
+    except Exception as e:
+        fatal_db_error(e)
     if user:
         return user
     raise HTTPException(status_code=404, detail="User not found")
@@ -102,9 +141,12 @@ def get_user(username: str):
 def get_password_hash(username: str):
     """Возвращает хеш пароля пользователя"""
     query = "SELECT password_hash FROM users WHERE username = %s"
-    db.cursor.execute(query, (username,))
-    result = db.cursor.fetchone()
-    print(result, username)
+    try:
+        db.cursor.execute(query, (username,))
+        result = db.cursor.fetchone()
+        #print(result, username)
+    except Exception as e:
+        fatal_db_error(e)
 
     if not result:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -113,12 +155,21 @@ def get_password_hash(username: str):
 
 @app.get("/test_categories/", response_model=List[TestCategory])
 def get_all_test_categories():
-    return db.get_all_test_categories()
+    """Возвращает все категории тестов."""
+    try:
+        return db.get_all_test_categories()
+    except Exception as e:
+        fatal_db_error(e)
+    
 
 
 @app.get("/test_types/", response_model=List[TestType])
 def get_all_test_types():
-    return db.get_all_test_types()
+    """Возвращает все типы тестов."""
+    try:
+        return db.get_all_test_types()
+    except Exception as e:
+        fatal_db_error(e)
 
 
 @app.on_event("shutdown")
