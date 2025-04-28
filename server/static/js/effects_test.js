@@ -1,6 +1,7 @@
 console.log("Скрипт загружен");
 let testData;
 let originalAnalyzer, processedAnalyzer;
+let resultScore = 1;
 
 // Запрашиваем тест
 async function fetchTest() {
@@ -36,6 +37,7 @@ function submitAnswer(event) {
     })
     .then(response => response.json())
     .then(data => {
+        resultScore = data.score;
         showResult(`Вы выбрали ${data.selected_effect}. Истинное значение: ${data.real_effect}. Оценка: ${data.score}`);
         showAnalyzers();
         setupAnalyzers();
@@ -60,7 +62,7 @@ function goToNextTest(event) {
     fetch("/next-test", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ "score": testData?.score || 0 }),
+        body: new URLSearchParams({ "score": resultScore || 0 }),
         credentials: "include"
     })
     .then(response => {
