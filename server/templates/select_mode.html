@@ -3,6 +3,23 @@
 {% block content %}
     <a href="/profile">Назад</a>
     <h1>Выберите режим тестирования</h1>
+
+    <div class="rules-section">
+        <button id="toggleRulesButton" onclick="toggleRules()">Показать правила прохождения тестов</button>
+        <div id="rulesContent" class="rules-content">
+            <div id="rulesInner" class="rules-inner">
+                <p>
+                    Рекомендуется проходить тесты с качественным аудиооборудованием. Наденьте наушники, либо используйте студийные мониторы.
+                    Тесты на тембральный слух и гармонический слух требуют от вас прослушивания аудиофайлов и выбора максимально близкого к правильному ответа.
+                    Тесты на ритм требуют от вас прослушивания кликов метронома и выбора правильного ответа, 
+                    либо интерактива в виде кликов в темп (подготовьте мышку/контроллер с малым временем отклика).
+                    Все результаты тестов сохраняются в вашем профиле, и вы можете отслеживать свой прогресс.
+                </p>
+                <!-- Здесь добавите свои реальные правила -->
+            </div>
+        </div>
+    </div>
+
     <form action="/start-test" method="post" id="testForm">
         <div class="mode-buttons">
             <button type="button" class="mode-button" data-mode="exam" onclick="selectMode('exam')">
@@ -43,6 +60,24 @@
     </form>
 
     <script>
+        function toggleRules() {
+            const rulesContent = document.getElementById('rulesContent');
+            const rulesInner = document.getElementById('rulesInner');
+            const button = document.getElementById('toggleRulesButton');
+
+            if (rulesContent.classList.contains('expanded')) {
+                // Скрытие
+                rulesContent.style.maxHeight = "0px";
+                rulesContent.classList.remove('expanded');
+                button.innerText = "Показать правила прохождения тестов";
+            } else {
+                // Показ с расчётом реальной высоты
+                rulesContent.style.maxHeight = rulesInner.scrollHeight + "px";
+                rulesContent.classList.add('expanded');
+                button.innerText = "Скрыть правила прохождения тестов";
+            }
+        }
+
         function selectMode(mode) {
             document.getElementById('selectedMode').value = mode;
             document.getElementById('difficultyModal').style.display = 'flex';
@@ -65,6 +100,34 @@
     </script>
 
     <style>
+        .rules-section {
+            text-align: center;
+            margin: 20px auto;
+        }
+        .rules-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .rules-content {
+            background-color: #363636;
+            margin: 10px auto;
+            max-width: 800px;
+            text-align: left;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-height: 0;
+            transition: max-height 0.5s ease;
+        }
+        .rules-inner {
+            padding: 15px;
+            justify-content: center;
+        }
+
         .mode-buttons {
             display: flex;
             flex-wrap: wrap;

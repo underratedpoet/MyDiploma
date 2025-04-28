@@ -105,6 +105,10 @@ class PostgresDBManager:
         self._execute(query, tuple(values))
         return True  # Пользователь успешно обновлен
 
+    def update_password(self, username: str, new_password_hash: str):
+        query = "UPDATE users SET password_hash = %s WHERE username = %s"
+        self._execute(query, (new_password_hash, username))
+
     def add_test(self, test: Test):
         query = "INSERT INTO tests (user_id, type_id, score, difficulty) VALUES (%s, %s, %s, %s);"
         self._execute(query, (test.user_id, test.type_id, test.score, test.difficulty))

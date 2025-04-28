@@ -36,7 +36,25 @@
         <!-- Кнопки управления -->
         <button type="button" id="edit-btn" onclick="enableEditing()">Изменить профиль</button>
         <button type="button" id="save-btn" onclick="saveProfile()" style="display: none;">Сохранить</button>
+
+        <button type="button" id="change-password-btn" onclick="openPasswordModal()">Изменить пароль</button>
     </form>
+</div>
+
+<div id="password-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Смена пароля</h3>
+        <form id="password-form">
+            <label>Новый пароль:</label>
+            <input type="password" id="new_password" required>
+
+            <label>Подтверждение пароля:</label>
+            <input type="password" id="confirm_password" required>
+
+            <button type="button" onclick="submitPasswordChange()">Подтвердить</button>
+            <button type="button" onclick="closePasswordModal()">Отмена</button>
+        </form>
+    </div>
 </div>
 
 <!-- Стили -->
@@ -86,6 +104,23 @@
     }
     .avatar:hover {
         opacity: 0.8;
+    }
+
+    .modal {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .modal-content {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 30px;
+        border-radius: 10px;
+        width: 300px;
     }
 </style>
 
@@ -148,5 +183,72 @@ function uploadAvatar() {
 
     input.click();
 }
+
+function openPasswordModal() {
+    document.getElementById("password-modal").style.display = "flex";
+}
+
+function closePasswordModal() {
+    document.getElementById("password-modal").style.display = "none";
+}
+
+async function submitPasswordChange() {
+    let newPassword = document.getElementById("new_password").value;
+    let confirmPassword = document.getElementById("confirm_password").value;
+    let changeButton = document.getElementById("change-password-btn");
+
+    if (newPassword !== confirmPassword) {
+        alert("Пароли не совпадают!");
+        return;
+    }
+
+    // Деактивируем кнопку изменения пароля
+    changeButton.disabled = true;
+    changeButton.innerText = "Отправка...";
+
+    try {
+        let reqVerification = await fetch("/request_email_verification", { method: "POST" });
+
+        if (!reqVerification.ok) {
+            alert("Ошибка отправки кода подтверждения.");
+            changeButton.disabled = false;
+            changeButton.innerText = "Изменить пароль";
+            return;
+        }
+
+        let code = prompt("Введите код подтверждения из почты:");
+
+        if (!code) {
+            alert("Код подтверждения обязателен.");
+            changeButton.disabled = false;
+            changeButton.innerText = "Изменить пароль";
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("new_password", newPassword);
+        formData.append("verification_code", code);
+
+        let response = await fetch("/confirm_change_password", {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.ok) {
+            alert("Пароль успешно изменён. Пожалуйста, войдите снова.");
+            window.location.href = "/logout"; // Выход после смены пароля
+        } else {
+            alert("Ошибка при смене пароля.");
+            changeButton.disabled = false;
+            changeButton.innerText = "Изменить пароль";
+        }
+    } catch (error) {
+        console.error("Ошибка:", error);
+        alert("Произошла ошибка.");
+        changeButton.disabled = false;
+        changeButton.innerText = "Изменить пароль";
+    }
+}
+
 </script>
 {% endblock %}

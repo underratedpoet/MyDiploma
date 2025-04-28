@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, Body, Query
 from typing import List
 import psycopg2
 import sys
+from pydantic import BaseModel
+#import bcrypt
 
 from manager import PostgresDBManager  # Подключаем ваш класс для работы с БД
 from utils.shemas import User, Test, UserUpdate, TestCategory, TestType
@@ -45,6 +47,24 @@ def register_user(user: User):
     if success:
         return {"message": "User registered successfully"}
     raise HTTPException(status_code=400, detail="User already exists")
+
+class ChangePasswordRequest(BaseModel):
+    username: str
+    new_password: str
+
+@app.post("/users/change_password")
+async def change_password(request: ChangePasswordRequest):
+    user = db.fetch_one("SELECT * FROM users WHERE username = %s", (request.username,))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_hashed_password = request.new_password#bcrypt.hashpw(request.new_password.encode("utf-8"), bcrypt.gensalt()).decode()
+
+    try:
+        db.update_password(request.username, new_hashed_password)
+        return {"message": "Password updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/tests/")
 def add_test(test: Test):
