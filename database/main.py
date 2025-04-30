@@ -87,10 +87,11 @@ def get_user_tests(
 
     try: 
         tests = db.get_tests_by_user(username=username, time_after=time_after_dt)
+        #print(tests)
+        return {"tests": tests or []}  # Возвращаем пустой список вместо None
     except Exception as e:
         fatal_db_error(e)
-    print(tests)
-    return {"tests": tests or []}  # Возвращаем пустой список вместо None
+
 
 
 @app.delete("/users/{user_id}")
@@ -106,12 +107,14 @@ def delete_user(user_id: int):
 def update_user(username: str, user: UserUpdate = Body(...)):
     """Обновляет данные пользователя (без изменения пароля)."""
     try:
+        print(user, username)
         success = db.update_user(username, user)
+        print(success)
+        if success:
+            return {"message": "User updated successfully"}
     except Exception as e:
+        print(e)
         fatal_db_error(e)
-    
-    if success:
-        return {"message": "User updated successfully"}
     
     raise HTTPException(status_code=400, detail="Invalid update parameters")
 
@@ -138,11 +141,12 @@ def authenticate_user(data: dict):
     query = "SELECT * FROM users WHERE username = %s AND password_hash = %s"
     try:
         user = db.fetch_one(query, (username, password_hash))
+        if user:
+            return {"username": user["username"], "email": user["email"], "role": user["role"]}
     except Exception as e:
         fatal_db_error(e)
 
-    if user:
-        return {"username": user["username"], "email": user["email"], "role": user["role"]}
+
 
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -151,10 +155,11 @@ def get_user(username: str):
     """Возвращает данные пользователя по `username`"""
     try:
         user = db.get_user_by_username(username)
+        if user:
+            return user
     except Exception as e:
         fatal_db_error(e)
-    if user:
-        return user
+
     raise HTTPException(status_code=404, detail="User not found")
 
 @app.get("/users/get_password_hash/{username}")
@@ -164,12 +169,11 @@ def get_password_hash(username: str):
     try:
         db.cursor.execute(query, (username,))
         result = db.cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
         #print(result, username)
     except Exception as e:
         fatal_db_error(e)
-
-    if not result:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
 
     return {"password_hash": result["password_hash"]}
 

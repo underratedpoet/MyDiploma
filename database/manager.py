@@ -31,13 +31,6 @@ class PostgresDBManager:
         self.cursor.execute(query, params)
         return self.cursor.fetchone()
 
-    def add_user(self, user: User):
-        query = """
-        INSERT INTO users (username, password_hash, first_name, last_name, email, phone_number, role)
-        VALUES (%s, %s, %s, %s, %s, %s, %s);
-        """
-        self._execute(query, (user.username, user.password_hash, user.first_name, user.last_name, user.email, user.phone_number, user.role))
-
     def user_exists(self, username: str, email: str) -> bool:
         """Проверяет, существует ли пользователь с таким username или email."""
         query = "SELECT user_id FROM users WHERE username = %s OR email = %s"
