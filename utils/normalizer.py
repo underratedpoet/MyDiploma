@@ -2,7 +2,7 @@ import os
 from tkinter import Tk, filedialog
 from pydub import AudioSegment
 
-def process_wav_files(output_dir, target_dBFS=-14.0, duration=15 * 1000):
+def process_wav_files(output_dir, file_paths: tuple[str] | str | None = None, target_dBFS=-14.0, duration=15 * 1000):
     """
     Нормализует громкость, обрезает до 15 секунд и добавляет fade in/out к группе WAV-файлов.
     Сохраняет обработанные файлы в указанную папку.
@@ -12,11 +12,12 @@ def process_wav_files(output_dir, target_dBFS=-14.0, duration=15 * 1000):
     :param duration: Длительность в миллисекундах (по умолчанию 15 секунд).
     """
     # Открыть файловый диалог для выбора файлов
-    Tk().withdraw()  # Отключить главное окно Tkinter
-    file_paths = filedialog.askopenfilenames(
-        title="Выберите WAV-файлы для обработки",
-        filetypes=[("WAV файлы", "*.wav")]
-    )
+    if not file_paths:
+        Tk().withdraw()  # Отключить главное окно Tkinter
+        file_paths = filedialog.askopenfilenames(
+            title="Выберите WAV-файлы для обработки",
+            filetypes=[("WAV файлы", "*.wav")]
+        )
 
     if not file_paths:
         print("Файлы не выбраны. Завершение работы.")
