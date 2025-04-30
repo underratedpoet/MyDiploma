@@ -138,6 +138,24 @@ services:
       - "8090:8000"
     restart: always
 
+  admin-back:
+    build: ./admin_panel/back
+    ports:
+      - "5000:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    env_file:
+      - .env
+
+  admin-front:
+    build: ./admin_panel/front
+    ports:
+      - "3000:80"
+    depends_on:
+      - admin-back
+
 volumes:
   postgres_data:
     driver: local
