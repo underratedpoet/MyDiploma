@@ -30,11 +30,11 @@ CREATE TABLE IF NOT EXISTS tests (
     difficulty VARCHAR(20)
 );
 
-CREATE TABLE IF NOT EXISTS confirmation_tokens (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
-    token VARCHAR(255) NOT NULL,
-    updated_data JSONB NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP
-);
+--CREATE TABLE IF NOT EXISTS confirmation_tokens (
+--    id SERIAL PRIMARY KEY,
+--    username VARCHAR(255) NOT NULL,
+--    token VARCHAR(255) NOT NULL,
+--    updated_data JSONB NOT NULL,
+--    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    expires_at TIMESTAMP
+--);

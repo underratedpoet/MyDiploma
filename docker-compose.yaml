@@ -124,19 +124,19 @@ services:
   #  command: ["python", "-u", "auto_train.py"]
   #  restart: "no"
 
-  ml-anomaly-detector:
-    build:
-      context: ./ml-anomaly-detector
-      dockerfile: Dockerfile
-    #depends_on:
-    #  ml-anomaly-trainer:
-    #    condition: service_completed_successfully
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - anomaly_data:/app/data  # 🔄 опционально читаем модель
-    ports:
-      - "8090:8000"
-    restart: always
+  #ml-anomaly-detector:
+  #  build:
+  #    context: ./ml-anomaly-detector
+  #    dockerfile: Dockerfile
+  #  #depends_on:
+  #  #  ml-anomaly-trainer:
+  #  #    condition: service_completed_successfully
+  #  volumes:
+  #    - /var/run/docker.sock:/var/run/docker.sock
+  #    - anomaly_data:/app/data  # 🔄 опционально читаем модель
+  #  ports:
+  #    - "8090:8000"
+  #  restart: always
 
   admin-back:
     build: ./admin_panel/back
