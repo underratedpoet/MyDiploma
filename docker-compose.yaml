@@ -88,11 +88,11 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  mailhog:
-    image: mailhog/mailhog
-    ports:
-      - "1025:1025"
-      - "8025:8025"
+#  mailhog:
+#    image: mailhog/mailhog
+#    ports:
+#      - "1025:1025"
+#      - "8025:8025"
 
 #  redis:
 #    image: redis:latest
@@ -160,4 +160,4 @@ volumes:
   postgres_data:
     driver: local
   mongo_data:
-  anomaly_data:
+  #anomaly_data:
