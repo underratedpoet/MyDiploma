@@ -9,6 +9,7 @@ import bcrypt
 import httpx
 
 from routes.session import create_access_token
+from utils.mails import send_email, generate_code, store_code, verify_code
 
 DB_API_URL = getenv("DB_API_URL", "http://db-server:8000")
 
@@ -22,12 +23,32 @@ async def register_page(request: Request):
 @router.post("/register")
 async def register(
     request: Request,
+    email: str = Form(...),
     username: str = Form(...),
-    password: str = Form(...),
-    email: str = Form(...)
-):
+    ):
+    # Генерация кода
+    code = await generate_code()
+    await store_code(username, code)
+    # Отправка письма
+    send_email(
+        to_email=email,
+        subject="Код подтверждения изменения данных",
+        body=f"Ваш код подтверждения: {code}\n\nДействует 5 минут."
+    )
+
+@router.post("/end_registration")
+async def end_registration(
+    request: Request, 
+    username: str = Form(...), 
+    password: str = Form(...), 
+    email: str = Form(...), 
+    verification_code: str = Form(...)
+    ):
+    # Проверка кода
+    if not await verify_code(username, verification_code):
+        return JSONResponse({"detail": "Invalid or expired verification code"}, status_code=400)
+        
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
-    print(hashed_password)
     user_data = {"username": username, "password_hash": hashed_password, "email": email}
 
     async with httpx.AsyncClient() as client:

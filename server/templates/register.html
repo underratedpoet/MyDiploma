@@ -2,14 +2,51 @@
 
 {% block content %}
 <h2>Регистрация</h2>
-<form method="post" action="/register">
+
+<!-- Первая форма — отправка email и username -->
+<form id="step1" method="post" action="/register" onsubmit="return showVerificationStep();">
     <input type="text" name="username" placeholder="Имя пользователя" required>
     <input type="email" name="email" placeholder="Email" required>
+    <button type="submit">Получить код подтверждения</button>
+</form>
+
+<!-- Вторая форма — ввод кода, пароля и завершение -->
+<form id="step2" method="post" action="/end_registration" style="display:none;">
+    <input type="hidden" name="username">
+    <input type="hidden" name="email">
     <input type="password" name="password" placeholder="Пароль" required>
-    <button type="submit">Зарегистрироваться</button>
+    <input type="text" name="verification_code" placeholder="Код подтверждения" required>
+    <button type="submit">Завершить регистрацию</button>
 </form>
 
 <div class="nav-links">
     <a href="/">На главную</a>
 </div>
+
+<script>
+function showVerificationStep() {
+    // Забираем значения из формы 1
+    const form1 = document.getElementById('step1');
+    const username = form1.username.value;
+    const email = form1.email.value;
+
+    // Передаем в скрытые поля формы 2
+    const form2 = document.getElementById('step2');
+    form2.username.value = username;
+    form2.email.value = email;
+
+    // Показываем форму 2
+    form1.style.display = 'none';
+    form2.style.display = 'block';
+
+    // Продолжаем сабмит формы 1 через fetch (без перезагрузки)
+    fetch("/register", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ username, email })
+    });
+
+    return false; // блокируем обычный submit
+}
+</script>
 {% endblock %}
